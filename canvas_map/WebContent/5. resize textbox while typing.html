@@ -1,0 +1,84 @@
+<html>
+<head>
+<title>resize textbox while typing</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.svg.min.js"></script>
+<style type="text/css">
+* {
+	margin: 0;
+	border: 0;
+	padding: 0;
+	position: absolute;
+}
+
+body {
+	background-color: #cccccc;
+}
+
+textarea {
+	border: 1px solid #aaaaaa;
+	width: 20px;
+	overflow: hidden;
+	background: none;
+	resize: none;
+}
+</style>
+<script type="text/javascript">
+	var wStep = 10;
+$(function() {
+	$("textarea").keyup(function() {
+		 var bp = getBorderPadding($(this));
+		 
+		 var dim = checkRequiredTextDimensions($(this));
+		 $(this).width(dim.w + bp.bl + bp.br + bp.pl + bp.pr);
+		 $(this).height(dim.h + bp.bt + bp.bb + bp.pt + bp.pb);
+	});
+});
+function getBorderPadding(el) {
+	return {
+		"bl": parseInt($(el).css("border-left-width").replace("px", "")),
+		"bt": parseInt($(el).css("border-top-width").replace("px", "")),
+		"bb": parseInt($(el).css("border-bottom-width").replace("px", "")),
+		"br": parseInt($(el).css("border-right-width").replace("px", "")),
+		"pr": parseInt($(el).css("padding-right").replace("px", "")),
+		"pl": parseInt($(el).css("padding-left").replace("px", "")),
+		"pt": parseInt($(el).css("padding-top").replace("px", "")),
+		"pb": parseInt($(el).css("padding-bottom").replace("px", ""))
+	}
+}
+function checkRequiredTextDimensions(textarea) {
+	var id = "textWidthCheckerId";
+	var text = $(textarea).val();
+	$("#" + id).remove();
+	var span = $("<span></span>");
+	$(span).css("font", $(textarea).css("font"));
+	// process spaces and new lines
+	text = text.replace(/ /g,"\u00a0").replace(/\n/g, "<br />");
+	// check if it ends in new line
+	if (endsWith(text, "<br />")) {
+		text = text + "\u00a0";
+	}
+	$(span).html(text);
+	
+	$(span).css("display", "none");
+	//$(span).attr("visibility", "hidden");
+	$(span).attr("id", id);
+	$("body").append(span);
+	var w = $(span).width();
+	var h = $(span).height();
+	
+	return {"w": w, "h": h};
+}
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
+</script>
+
+</head>
+<body>
+	<div id="svgcanvas"></div>
+	<textarea id="node1" style="left: 100px; top: 10px;" wrap="off"></textarea>
+	<textarea id="node2" style="left: 500px; top: 120px;" wrap="off"></textarea>
+</body>
+</html>

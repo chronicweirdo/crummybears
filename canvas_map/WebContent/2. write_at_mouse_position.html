@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>write on canvas at mouse position</title>
+<script type="text/javascript" src="jquery.js"></script>
+<style type="text/css">
+* {
+	margin: 0;
+	border: 0;
+	padding: 0;
+	position: absolute;
+}
+
+canvas { /* position: absolute; */
+	top: 0;
+	left: 0;
+}
+
+textarea { /* position: absolute; */
+	
+}
+</style>
+<script>
+	function getPosition(e) {
+		var targ;
+		if (!e)
+			e = window.event;
+		if (e.target)
+			targ = e.target;
+		else if (e.srcElement)
+			targ = e.srcElement;
+		if (targ.nodeType == 3) // defeat Safari bug
+			targ = targ.parentNode;
+
+		// jQuery normalizes the pageX and pageY
+		// pageX,Y are the mouse positions relative to the document
+		// offset() returns the position of the element relative to the document
+		var x = e.pageX - $(targ).offset().left;
+		var y = e.pageY - $(targ).offset().top;
+
+		return {
+			"x" : x,
+			"y" : y
+		};
+	};
+	
+	function addText(x, y) {
+		//alert("writing text at" + x + "," + y);
+		var c = document.getElementById("canvas");
+		var ctx = c.getContext("2d");
+		ctx.fillStyle = "#ff0000";
+		ctx.fillText("text", x, y);
+	};
+	
+	var textX = 100;
+	var textY = 100;
+	var text = "";
+	function updateText(newText) {
+		// clear previous text
+		var c = document.getElementById("canvas");
+		var ctx = c.getContext("2d");
+		ctx.fillStyle = "#aaaaaa";
+		ctx.fillText(text, textX, textY);
+		// write new text
+		text = newText;
+		ctx.fillStyle = "#ff0000";
+		ctx.fillText(text, textX, textY);
+	}
+
+	
+</script>
+</head>
+<body>
+	<canvas id="canvas" width="100%" height="100%"></canvas>
+	<script>
+		var c = document.getElementById("canvas");
+		var windowWidth = window.innerWidth;
+		var windowHeight = window.innerHeight;
+		c.width = windowWidth;
+		c.height = windowHeight;
+		var ctx = c.getContext("2d");
+		ctx.fillStyle = "#aaaaaa";
+		ctx.fillRect(0, 0, windowWidth, windowHeight);
+		
+		// now just make sure you use this with jQuery
+		// obviously you can use other events other than click
+		$("#canvas").click(function(event) {
+			// jQuery would normalize the event
+			position = getPosition(event);
+			//now you can use the x and y positions
+			addText(position.x, position.y);
+		});
+	</script>
+</body>
+<script>
+$(document.body).on('keydown', function(e) {
+	//throw(e.which);
+	var newText;
+    switch (e.which) {
+    	case 8:
+    		newText = text.substring(0, text.length-1)
+    		break;
+    	default:
+    		character = String.fromCharCode(e.which);
+    		newText = text + character;
+    }
+	updateText(newText);
+});
+</script>
+</html>
