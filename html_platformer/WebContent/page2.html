@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Create animation</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script>
+	var x = 0;
+	var y = 0;
+	$(function() {
+		startAnimation();
+	});
+	function update() {
+		x += 1;
+		y += 1;
+	}
+	function draw() {
+		canvas().fillRect(x, y, 100, 100);
+	}
+	function startAnimation() {
+		var FPS = 30;
+		setInterval(function() {
+			game();
+		}, 1000/FPS);
+	}
+	function clear() {
+		canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+	}
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	function game() {
+		update();
+		clear();
+		draw();
+	}
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="800" style="border:1px solid #000000;"></canvas>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Create canvas and draw on it</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script>
+	$(function() {
+		draw();
+	});
+	function draw() {
+		var c = $('#myCanvas').get(0).getContext('2d');
+		c.fillRect(25, 25, 100, 100);
+	}
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="800" style="border:1px solid #000000;"></canvas>
+</body>
+</html>

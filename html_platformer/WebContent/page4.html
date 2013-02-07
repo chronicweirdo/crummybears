@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Block collision detection</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	// constants
+	var MOVE_STEP = 1;
+	var WALL_WIDTH = 10;
+	
+	// object definitions
+	function Block(x, y, w, h) {
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+		this.c = "#000000";
+		
+		this.move = function(x, y) {
+			this.x += x;
+			this.y += y;
+		}
+		
+		this.draw = function() {
+			canvas().fillStyle = this.c;
+			canvas().fillRect(this.x, this.y, this.w, this.h);
+		}
+		
+		this.rect = function() {
+			return {x1: this.x, y1: this.y, x2: this.x+this.w, y2: this.y+this.h}
+		}
+	}
+
+	// objects definition
+	var block, walls;
+	
+	$(function() {
+		// objects creation
+		block = new Block(100, 100, 50, 50);
+		walls = [new Block(0, 0, WALL_WIDTH, canvasHeight()), 
+		         new Block(canvasWidth()-WALL_WIDTH, 0, WALL_WIDTH, canvasHeight()),
+		         new Block(WALL_WIDTH, 0, canvasWidth()-2*WALL_WIDTH, WALL_WIDTH),
+		         new Block(WALL_WIDTH, canvasHeight()-WALL_WIDTH, canvasWidth()-2*WALL_WIDTH, WALL_WIDTH)];
+		// start game
+		bindKeys();
+		startAnimation();
+	});
+	function update() {
+	}
+	function draw() {
+		block.draw();
+		for (i=0; i<walls.length; i++) {
+			walls[i].draw();
+		}		
+	}
+	function startAnimation() {
+		var FPS = 30;
+		setInterval(function() {
+			game();
+		}, 1000/FPS);
+	}
+	function clear() {
+		canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+	}
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	function game() {
+		update();
+		checkCollisions();
+		clear();
+		draw();
+	}
+	function bindKeys() {
+		$(document).bind("keydown", "left", moveLeft);
+		$(document).bind("keydown", "right", moveRight);
+		$(document).bind("keydown", "up", moveUp);
+		$(document).bind("keydown", "down", moveDown);
+	}
+	function moveLeft() {
+		block.move(-MOVE_STEP, 0);
+	}
+	function moveRight() {
+		block.move(MOVE_STEP, 0);
+	}
+	function moveUp() {
+		block.move(0, -MOVE_STEP);
+	}
+	function moveDown() {
+		block.move(0, MOVE_STEP);
+	}
+	
+	function checkCollisions() {
+		var collides = false;
+		for (i=0; i<walls.length; i++) {
+			collides = collides || collide(block, walls[i]);
+		}
+		if (collides) {
+			block.c = "#FF0000";
+		} else {
+			block.c = "#000000";
+		}
+	}
+	
+	function collide(object1, object2) {
+		var r1 = object1.rect();
+		var r2 = object2.rect();
+		var p = [{x: r2.x1, y: r2.y1}, {x: r2.x2, y: r2.y2}, {x: r2.x2, y: r2.y2}, {x: r2.x1, y: r2.y2}];
+		var collides = false;
+		for (i = 0; i < p.length; i++) {
+			collides = collides || pointInside(r1, p[i]);
+		}
+		return collides;
+	}
+	function pointInside(rect, p) {
+		return (rect.x1 <= p.x) && (p.x <= rect.x2) && (rect.y1 <= p.y) && (p.y <= rect.y2);
+	}
+	
+
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+</body>
+</html>

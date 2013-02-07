@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Read keys and control object</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	// constants
+	var MOVE_STEP = 1;
+	
+	// object definitions
+	function Block(x, y, w, h) {
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+		
+		this.move = function(x, y) {
+			this.x += x;
+			this.y += y;
+		}
+	}
+
+	// objects creation
+	var block = new Block(0, 0, 50, 50);
+	
+	$(function() {
+		bindKeys();
+		startAnimation();
+	});
+	function update() {
+	}
+	function draw() {
+		canvas().fillRect(block.x, block.y, block.w, block.h);
+	}
+	function startAnimation() {
+		var FPS = 30;
+		setInterval(function() {
+			game();
+		}, 1000/FPS);
+	}
+	function clear() {
+		canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+	}
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	function game() {
+		update();
+		clear();
+		draw();
+	}
+	function bindKeys() {
+		$(document).bind("keydown", "left", moveLeft);
+		$(document).bind("keydown", "right", moveRight);
+		$(document).bind("keydown", "up", moveUp);
+		$(document).bind("keydown", "down", moveDown);
+	}
+	function moveLeft() {
+		block.move(-MOVE_STEP, 0);
+	}
+	function moveRight() {
+		block.move(MOVE_STEP, 0);
+	}
+	function moveUp() {
+		block.move(0, -MOVE_STEP);
+	}
+	function moveDown() {
+		block.move(0, MOVE_STEP);
+	}
+	
+
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+</body>
+</html>
