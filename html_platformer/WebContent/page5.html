@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Bouncy physics</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	// constants
+	var MOVE_STEP = 1;
+	var PARTICLE_RADIUS = 5;
+	var PARTICLES_NR = 50;
+	
+	
+	// object definitions
+	function Particle(p, v) {
+		this.p = p;
+		this.v = v;
+		this.c = "#000000";
+		
+		this.move = function() {
+			this.p.x += this.v.x;
+			this.p.y += this.v.y;
+			if (this.p.x < 0 || this.p.x > canvasWidth()) {
+				this.v.x = - this.v.x;
+			}
+			if (this.p.y < 0 || this.p.y > canvasHeight()) {
+				this.v.y = - this.v.y;
+			}
+		}
+		
+		this.draw = function() {
+			canvas().fillStyle = this.c;
+			canvas().beginPath();
+			canvas().arc(this.p.x, this.p.y, PARTICLE_RADIUS, 0, 2 * Math.PI, false);
+			canvas().fill();
+		}
+	}
+
+	// objects definition
+	var particles = new Array();
+	
+	$(function() {
+		// objects creation
+		for (i=0; i<PARTICLES_NR; i++) {
+			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: random(5), y: random(5)});
+		}
+		// start game
+		startAnimation();
+	});
+	function random(max) {
+		return Math.floor(Math.random()*max);
+	}
+	function update() {
+		for (i=0; i<particles.length; i++) {
+			particles[i].move();
+		}
+	}
+	function draw() {
+		for (i=0; i<particles.length; i++) {
+			particles[i].draw();
+		}		
+	}
+	function startAnimation() {
+		var FPS = 30;
+		setInterval(function() {
+			game();
+		}, 1000/FPS);
+	}
+	function clear() {
+		canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+	}
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	function game() {
+		update();
+		//checkCollisions();
+		clear();
+		draw();
+	}
+	
+	function checkCollisions() {
+		var collides = false;
+		for (i=0; i<walls.length; i++) {
+			collides = collides || collide(block, walls[i]);
+		}
+		if (collides) {
+			block.c = "#FF0000";
+		} else {
+			block.c = "#000000";
+		}
+	}
+	
+	function collide(object1, object2) {
+		var r1 = object1.rect();
+		var r2 = object2.rect();
+		var dx = Math.abs(r1.cx - r2.cx) - (r1.hw + r2.hw);
+		var dy = Math.abs(r1.cy - r2.cy) - (r1.hh + r2.hh);
+		return (dx < 0) && (dy < 0);
+	}
+	
+
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+</body>
+</html>
