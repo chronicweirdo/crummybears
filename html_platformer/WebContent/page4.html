@@ -29,7 +29,8 @@
 		}
 		
 		this.rect = function() {
-			return {x1: this.x, y1: this.y, x2: this.x+this.w, y2: this.y+this.h}
+			return {x1: this.x, y1: this.y, x2: this.x+this.w, y2: this.y+this.h,
+				cx: this.x+this.w/2, cy: this.y+this.h/2, hh: this.h/2, hw: this.w/2}
 		}
 	}
 
@@ -113,15 +114,9 @@
 	function collide(object1, object2) {
 		var r1 = object1.rect();
 		var r2 = object2.rect();
-		var p = [{x: r2.x1, y: r2.y1}, {x: r2.x2, y: r2.y2}, {x: r2.x2, y: r2.y2}, {x: r2.x1, y: r2.y2}];
-		var collides = false;
-		for (i = 0; i < p.length; i++) {
-			collides = collides || pointInside(r1, p[i]);
-		}
-		return collides;
-	}
-	function pointInside(rect, p) {
-		return (rect.x1 <= p.x) && (p.x <= rect.x2) && (rect.y1 <= p.y) && (p.y <= rect.y2);
+		var dx = Math.abs(r1.cx - r2.cx) - (r1.hw + r2.hw);
+		var dy = Math.abs(r1.cy - r2.cy) - (r1.hh + r2.hh);
+		return (dx < 0) && (dy < 0);
 	}
 	
 
