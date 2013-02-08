@@ -21,10 +21,10 @@
 		this.move = function() {
 			this.p.x += this.v.x;
 			this.p.y += this.v.y;
-			if (this.p.x < 0 || this.p.x > canvasWidth()) {
+			if ((this.p.x < 0 && this.v.x < 0) || (this.p.x > canvasWidth() && this.v.x > 0)) {
 				this.v.x = - this.v.x;
 			}
-			if (this.p.y < 0 || this.p.y > canvasHeight()) {
+			if ((this.p.y < 0 && this.v.y < 0) || (this.p.y > canvasHeight() && this.v.y > 0)) {
 				this.v.y = - this.v.y;
 			}
 		}
