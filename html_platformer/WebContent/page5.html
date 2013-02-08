@@ -9,10 +9,10 @@
 	// constants
 	var MOVE_STEP = 1;
 	var PARTICLE_RADIUS = 5;
-	var PARTICLES_NR = 50;
+	var PARTICLES_NR = 1;
 	
 	
-	// object definitions
+	// class definitions
 	function Particle(p, v) {
 		this.p = p;
 		this.v = v;
@@ -21,12 +21,12 @@
 		this.move = function() {
 			this.p.x += this.v.x;
 			this.p.y += this.v.y;
-			if ((this.p.x < 0 && this.v.x < 0) || (this.p.x > canvasWidth() && this.v.x > 0)) {
+			/* if ((this.p.x < 0 && this.v.x < 0) || (this.p.x > canvasWidth() && this.v.x > 0)) {
 				this.v.x = - this.v.x;
 			}
 			if ((this.p.y < 0 && this.v.y < 0) || (this.p.y > canvasHeight() && this.v.y > 0)) {
 				this.v.y = - this.v.y;
-			}
+			} */
 		}
 		
 		this.draw = function() {
@@ -38,12 +38,20 @@
 	}
 
 	// objects definition
+	var gameHandle;
 	var particles = new Array();
+	var planeDistances = [400];
+	var planes = [ 
+	               /*{a: 1,  b: 0, c: 1}*/
+	               /*{a: 0, b: -1, c: 1},*/
+	               /* {a: -1, b: 0, c: 1} */
+	               {a: 0,  b: 1, c: 1}
+	              ]; // actually normals to the planes
 	
 	$(function() {
 		// objects creation
 		for (i=0; i<PARTICLES_NR; i++) {
-			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: random(5), y: random(5)});
+			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: /* random(5) */1, y: 3/* random(5) */});
 		}
 		// start game
 		startAnimation();
@@ -63,7 +71,7 @@
 	}
 	function startAnimation() {
 		var FPS = 30;
-		setInterval(function() {
+		gameHandle = setInterval(function() {
 			game();
 		}, 1000/FPS);
 	}
@@ -81,20 +89,29 @@
 	}
 	function game() {
 		update();
-		//checkCollisions();
+		checkCollisions();
 		clear();
 		draw();
 	}
 	
 	function checkCollisions() {
-		var collides = false;
-		for (i=0; i<walls.length; i++) {
-			collides = collides || collide(block, walls[i]);
-		}
-		if (collides) {
-			block.c = "#FF0000";
-		} else {
-			block.c = "#000000";
+		log("-----");
+		for (i = 0; i < particles.length; i++) {
+			for (j = 0; j < planes.length; j++) {
+				log("v=(" + particles[i].v.x + "," + particles[i].v.y + ")");
+				var distance = particles[i].p.x * planes[j].a + particles[i].p.y * planes[j].b + planes[j].c;
+				var normalVelocity = particles[i].v.x * planes[j].a + particles[i].v.y * planes[j].b;
+				log(distance + ' ' + normalVelocity);
+				if (distance < planeDistances[j] && normalVelocity < 0) {
+					
+					// collision response: R = V - 2*N*(V.N)
+					var reflectionVector = new Object();
+					reflectionVector.x = particles[i].v.x - 2 * normalVelocity * planes[j].a;
+					reflectionVector.y = particles[i].v.y - 2 * normalVelocity * planes[j].b;
+					particles[i].v.x = reflectionVector.x;
+					particles[i].v.y = reflectionVector.y;
+				}
+			}
 		}
 	}
 	
@@ -106,10 +123,24 @@
 		return (dx < 0) && (dy < 0);
 	}
 	
+	function log(text) {
+		$('#console').prepend(text + '<br />');
+	}
+	
+	function clearLog() {
+		$('#console').empty();
+	}
+	
+	function stopGame() {
+		clearInterval(gameHandle);
+	}
 
 </script>
 </head>
 <body>
 	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+	<div id="console" style="height: 200px; overflow: scroll;"></div>
+	<a onclick="javascript:clearLog()">clear</a>
+	<a onclick="javascript:stopGame()">stop</a>
 </body>
 </html>
