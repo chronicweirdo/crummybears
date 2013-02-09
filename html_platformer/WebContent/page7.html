@@ -97,9 +97,6 @@
 		
 		var centerPoint = findCenterPoint(lines);
 		particles = new Array();
-		/* for (i=0; i<particlesNr; i++) {
-			particles[i] = new Particle({x: centerPoint.x, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
-		} */
 		particles[0] = new Particle({x: centerPoint.x-100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
 		particles[1] = new Particle({x: centerPoint.x+100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
 		
@@ -186,20 +183,40 @@
 	function checkCollisions() {
 		for (i = 0; i < particles.length; i++) {
 			// check collisions with other particles
-			for (j = 0; j < particles.length; j++) {
+			for (j = i+1; j < particles.length; j++) {
 				if (i != j) {
 					var distance = Math.sqrt(
 							(particles[i].p.x - particles[j].p.x) * (particles[i].p.x - particles[j].p.x)
 							+ (particles[i].p.y - particles[j].p.y) * (particles[i].p.y - particles[j].p.y));
 					var distance = distance - particles[i].r - particles[j].r;
+					log(distance);
+					// handle both particles now!
 					if (distance <= 0) {
-						log("particles " + i + " and " + j + " collide");
+						// apply correction for particle i
+						var particle = particles[i];
+						var correction = (-distance/2) / magnitude(particle.v);
+						var reverseVelocity = {x: -particle.v.x, y: -particle.v.y};
+						var correctionVector = {x: correction * reverseVelocity.x, y: correction * reverseVelocity.y};
+						particle.p.x += correctionVector.x;
+						particle.p.y += correctionVector.y;
+						
+						// apply correction for particle j
+						var particle = particles[j];
+						var correction = (-distance/2) / magnitude(particle.v);
+						var reverseVelocity = {x: -particle.v.x, y: -particle.v.y};
+						var correctionVector = {x: correction * reverseVelocity.x, y: correction * reverseVelocity.y};
+						particle.p.x += correctionVector.x;
+						particle.p.y += correctionVector.y;
+						
+						// compute new velocity for particle i
 						var normal = {x: particles[i].p.x - particles[j].p.x, y: particles[i].p.y - particles[j].p.y};
-						log("coordonates " + particles[i].p.x + " " + particles[j].p.x + " " + particles[i].p.y + " " + particles[j].p.y);
-						log("normal (" + normal.x + "," + normal.y + ")");
 						var velocity = findReflection(particles[i].v, normal, particles[i].e);
-						log("particle " + i + " new velocity (" + velocity.x + "," + velocity.y + ")");
 						particles[i].v = velocity;
+						
+						// compute new velocity for particle i
+						var normal = {x: particles[j].p.x - particles[i].p.x, y: particles[j].p.y - particles[i].p.y};
+						var velocity = findReflection(particles[j].v, normal, particles[j].e);
+						particles[j].v = velocity;
 					}
 				}
 			}
@@ -209,12 +226,57 @@
 				var distance = findProjectionDistance(lines[j].a, lines[j].b, particles[i].p);
 				distance -= particles[i].r;
 				if (distance <= 0) {
+					// apply correction
+					var correction = (-distance) / magnitude(particles[i].v);
+					var reverseVelocity = {x: -particles[i].v.x, y: -particles[i].v.y};
+					var correctionVector = {x: correction * reverseVelocity.x, y: correction * reverseVelocity.y};
+					particles[i].p.x += correctionVector.x;
+					particles[i].p.y += correctionVector.y;
+					
 					// compute the new velocity, a reflection of the current velocity
 					var velocity = findReflectionOnWall(lines[j].a, lines[j].b, particles[i].v, particles[i].e);
 					particles[i].v = velocity;
 				}
 			}
 		}
+	}
+	
+	// find the angle between two vectors
+	function findAngle(a, b) {
+		// find magnituted of vectors
+		var lal = Math.sqrt(a.x * a.x + a.y * a.y);
+		var lbl = Math.sqrt(b.x * b.x + b.y * b.y);
+		// find dot product
+		var a_b = a.x * b.x + a.y * b.y;
+		// find cosine
+		var cos = a_b / lal / lbl;
+		// return angle
+		return Math.acos(cos);
+	}
+	function magnitude(v) {
+		return Math.sqrt(v.x * v.x + v.y * v.y);
+	}
+	
+	function findIntersectionPoint(l1, l2) {
+		// extract origin points of vectors
+		var p1 = l1.a;
+		var p2 = l2.a;
+		// calculate vectors
+		var v1 = {x: l1.b.x - l1.a.x, y: l1.b.y - l1.a.y};
+		var v2 = {x: l2.b.x - l2.a.x, y: l2.b.y - l2.a.y};
+		// calculate vector between p1 and p2
+		var vp = {x: p2.x - p1.x, y: p2.y - p1.y};
+		// calculate angle between v1 and v2
+		var av1v2 = findAngle(v1, v2);
+		// calculate angle between vp and v2
+		var avpv2 = findAngle(vp, v2);
+		// calculate magnitudes
+		var lv1l = magnitude(v1);
+		var lvpl = magnitude(vp);
+		// calculate factor
+		var factor = (lv1l * Math.sin(av1v2)) / (lvpl * Math.sin(avpv2));
+		// calculate intersection point
+		return {x: p1.x + factor * v1.x, y: p1.y + factor * v1.y};
 	}
 	
 	function findReflection(a, b, pc, e) {
@@ -278,13 +340,10 @@
 	function findReflection(v, n, e) {
 		// compute the dot product of n and itself
 		var n_n = n.x * n.x + n.y * n.y;
-		log("n_n=" + n_n);
 		// compute the dot product of normal and v
 		var v_n = v.x * n.x + v.y * n.y;
-		log("v_n=" + v_n);
 		// compute reflection
 		var factor = (1+e) * v_n / n_n;
-		log("factor=" + factor);
 		var r = {x: v.x - factor * n.x, y: v.y - factor * n.y};
 		return r;
 	}
