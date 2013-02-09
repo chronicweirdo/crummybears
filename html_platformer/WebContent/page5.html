@@ -3,6 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Bouncy physics</title>
+<style>
+	td, th {
+		border: 1px solid black;
+		vertical-align: top;
+	}
+</style>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
 <script>
@@ -39,19 +45,15 @@
 
 	// objects definition
 	var gameHandle;
-	var particles = new Array();
-	var planeDistances = [400];
-	var planes = [ 
-	               {a: 1,  b: 0, c: 1}
-	               /*{a: 0, b: -1, c: 1},*/
-	               /* {a: -1, b: 0, c: 1} */
-	               /* {a: 0,  b: 1, c: 1} */
-	              ]; // actually normals to the planes
+	var particles;
 	var lines;
+	var particlesNr = PARTICLES_NR;
 	
-	$(function() {
+	function startGame() {
+		getGameVariables();
 		// objects creation
-		for (i=0; i<PARTICLES_NR; i++) {
+		particles = new Array();
+		for (i=0; i<particlesNr; i++) {
 			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: random(10) , y: random(10)});
 		}
 		lines = [
@@ -62,6 +64,13 @@
 	             ]
 		// start game
 		startAnimation();
+	}
+	function getGameVariables() {
+		particlesNr = $('#particlesNr').val();
+	}
+	
+	$(function() {
+		//startGame();
 	});
 	function random(max) {
 		return Math.floor(Math.random()*max);
@@ -96,31 +105,9 @@
 	}
 	function game() {
 		update();
-		//checkCollisions();
-		checkCollisionNew();
+		checkCollisions();
 		clear();
 		draw();
-	}
-	
-	function checkCollisions() {
-		log("-----");
-		for (i = 0; i < particles.length; i++) {
-			for (j = 0; j < planes.length; j++) {
-				log("v=(" + particles[i].v.x + "," + particles[i].v.y + ")");
-				var distance = particles[i].p.x * planes[j].a + particles[i].p.y * planes[j].b + planes[j].c;
-				var normalVelocity = particles[i].v.x * planes[j].a + particles[i].v.y * planes[j].b;
-				log(distance + ' ' + normalVelocity);
-				if (distance < planeDistances[j] && normalVelocity < 0) {
-					
-					// collision response: R = V - 2*N*(V.N)
-					var reflectionVector = new Object();
-					reflectionVector.x = particles[i].v.x - 2 * normalVelocity * planes[j].a;
-					reflectionVector.y = particles[i].v.y - 2 * normalVelocity * planes[j].b;
-					particles[i].v.x = reflectionVector.x;
-					particles[i].v.y = reflectionVector.y;
-				}
-			}
-		}
 	}
 	
 	function collide(object1, object2) {
@@ -139,21 +126,22 @@
 		$('#console').empty();
 	}
 	
+	
 	function stopGame() {
 		clearInterval(gameHandle);
 	}
 	
-	
-	
-	function checkCollisionNew() {
+	function checkCollisions() {
 		for (i = 0; i < particles.length; i++) {
 			for (j = 0; j < lines.length; j++) {
 				// check if we have a collision
 				var distance = findProjectionDistance(lines[j].a, lines[j].b, particles[i].p);
+				log("particle " + i + " distance to line " + j + " is " + distance);
 				if (distance <= 0) {
 					// compute the new velocity, a reflection of the current velocity
 					var velocity = findReflection(lines[j].a, lines[j].b, particles[i].v);
 					particles[i].v = velocity;
+					log("particle " + i + " new velocity is (" + velocity.x + "," + velocity.y + ")");
 				}
 			}
 		}
@@ -177,10 +165,13 @@
 		// compute the size of the vector rejection
 		var lpcl = Math.sqrt(pc.x*pc.x + pc.y*pc.y);
 		// compute the normal vector of ab to left (ccw) and right (cw) - we will use the left
-		var ccwab = {x: -ab.y, y: ab.x};
-		var cwab = {x: ab.y, y: -ab.x};
+		// BECAUSE OF THE WEIRD COORDONATE SYSTEM, WHERE POSITIVE Y GOES DOWNWARD,
+		// THE CW AND CCW VECTORS ARE REVERSED FROM THE WAY THEY ARE USUALLY COMPUTED
+		var cwab = {x: -ab.y, y: ab.x};
+		var ccwab = {x: ab.y, y: -ab.x};
 		// compute the unit (normalized) normal vector
 		var nccwab = {x: ccwab.x / labl, y: ccwab.y / labl};
+		var ncwab = {x: cwab.x / labl, y: cwab.y / labl};
 		// compute distance of C from AB using the unit ccw normal vector
 		var ccwd = pc.x * nccwab.x + pc.y * nccwab.y;
 		// if this distance is larger than 0, point c is to the left of ab, or we have to rotate ab ccw to touch c
@@ -207,24 +198,51 @@
 </head>
 <body>
 	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
-	<div id="console" style="height: 200px; overflow: scroll;"></div>
-	<button onclick="javascript:clearLog()">clear</button>
-	<button onclick="javascript:stopGame()">stop</button>
 	<div>
-		<h1>References:</h1>
-		<table>
+		<table style="width: 100%">
 			<tr>
-				<th>Calculating the distance between the particle and a line</th>
+				<th>Game controls</th>
+				<th>Console</th>
 			</tr>
 			<tr>
-				<td style="vertical-align: top"><img alt="drawing1" src="page5_drawing1.jpg"></td>
+				<td>
+					<button onclick="javascript:startGame()">start</button>
+					<button onclick="javascript:stopGame()">stop</button>
+				</td>
+				<td>
+					<button onclick="javascript:clearLog()">clear console</button>
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>particlesNr:</label><input id="particlesNr" value="15">
+				</td>
+				<td>
+					<div id="console" style="height: 200px; overflow: scroll;"></div>
+				</td>
+			</tr>
+			
+		</table>
+	</div>
+	
+	
+	
+	<div>
+		<h1>Notes:</h1>
+		<table>
+			<tr>
+				<th colspan="2">Calculating the distance between the particle and a line</th>
+			</tr>
+			<tr>
+				<td><img alt="drawing1" src="page5_drawing1.jpg"></td>
 				<td><img alt="formulas1" src="page5_formulas1.jpg"></td>
 			</tr>
 			<tr>
-				<th>Calculating the reflection of the particle speed, required on collision</th>
+				<th colspan="2">Calculating the reflection of the particle speed, required on collision</th>
 			</tr>
 			<tr>
-				<td style="vertical-align: top"><img alt="drawing2" src="page5_drawing2.jpg"></td>
+				<td><img alt="drawing2" src="page5_drawing2.jpg"></td>
 				<td><img alt="formulas2" src="page5_formulas2.jpg"></td>
 			</tr>
 		</table>
