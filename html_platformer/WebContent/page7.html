@@ -24,15 +24,17 @@
 	var PARTICLE_RADIUS = 50;
 	var PARTICLES_NR = 2;
 	var FPS = 30;
+	var VELOCITY_THRESHOLD = 0.01;
 	
 	
 	// class definitions
-	function Particle(p, r, v,e) {
+	function Particle(p, r, v, e, m) {
 		this.p = p;
 		this.v = v;
 		this.c = "#000000";
 		this.e = e; // restitution coefficient
 		this.r = r;
+		this.m = m;
 		
 		this.move = function() {
 			this.p.x += this.v.x;
@@ -42,7 +44,12 @@
 		}
 		
 		this.draw = function() {
-			canvas().fillStyle = this.c;
+			canvas().strokeStyle = "#000000";
+			canvas().beginPath();
+			canvas().arc(this.p.x, this.p.y, this.r, 0, 2 * Math.PI, false);
+			canvas().stroke();
+			var massColor = Math.floor(255 * (1-this.m));
+			canvas().fillStyle = "rgb(" + massColor + "," + massColor + "," + massColor + ")";
 			canvas().beginPath();
 			canvas().arc(this.p.x, this.p.y, this.r, 0, 2 * Math.PI, false);
 			canvas().fill();
@@ -69,6 +76,7 @@
 	var lines;
 	var particlesNr = PARTICLES_NR;
 	var particleRadius = PARTICLE_RADIUS;
+	var velocityThreshold = VELOCITY_THRESHOLD;
 	
 	var gravity = {x: 0, y: 9.8};
 	var dt = 1/FPS; // number of seconds per frame
@@ -77,7 +85,7 @@
 	function startGame() {
 		// in case the game is running, stop it first
 		stopGame();
-		//getGameVariables();
+		getGameVariables();
 		// objects creation
 		/* var lineEnds = [{x: 50, y: 50},
 		                {x: 50, y: canvasHeight()-50},
@@ -97,19 +105,23 @@
 		
 		var centerPoint = findCenterPoint(lines);
 		particles = new Array();
-		particles[0] = new Particle({x: centerPoint.x-100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
-		particles[1] = new Particle({x: centerPoint.x+100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
+		particles[0] = new Particle({x: centerPoint.x-100, y: centerPoint.y}, 30 + random(20), {x: random(20) - 10 , y: random(20) - 10}, Math.random(), Math.random());
+		particles[1] = new Particle({x: centerPoint.x+100, y: centerPoint.y}, 30 + random(20), {x: random(20) - 10 , y: random(20) - 10}, Math.random(), Math.random());
+		particles[2] = new Particle({x: centerPoint.x+200, y: centerPoint.y}, 30 + random(20), {x: random(20) - 10 , y: random(20) - 10}, Math.random(), Math.random());
+		particles[3] = new Particle({x: centerPoint.x-200, y: centerPoint.y}, 30 + random(20), {x: random(20) - 10 , y: random(20) - 10}, Math.random(), Math.random());
 		
 		// start game
 		startAnimation();
 	}
 	function getGameVariables() {
-		particlesNr = $('#particlesNr').val();
-		particleRadius = $('#particleRadius').val();
+		//particlesNr = $('#particlesNr').val();
+		//particleRadius = $('#particleRadius').val();
+		velocityThreshold = $('#velocityThreshold').val();
 	}
 	function setDefaultGameVariables() {
-		$('#particlesNr').val(particlesNr);
-		$('#particleRadius').val(particleRadius);
+		//$('#particlesNr').val(particlesNr);
+		//$('#particleRadius').val(particleRadius);
+		$('#velocityThreshold').val(velocityThreshold);
 	}
 	
 	$(function() {
@@ -175,6 +187,10 @@
 		$('#console').empty();
 	}
 	
+	function logVector(name, v) {
+		log(name + " = (" + v.x + "," + v.y + ")");
+	}
+	
 	
 	function stopGame() {
 		clearInterval(gameHandle);
@@ -189,12 +205,11 @@
 							(particles[i].p.x - particles[j].p.x) * (particles[i].p.x - particles[j].p.x)
 							+ (particles[i].p.y - particles[j].p.y) * (particles[i].p.y - particles[j].p.y));
 					var distance = distance - particles[i].r - particles[j].r;
-					log(distance);
 					// handle both particles now!
 					if (distance <= 0) {
 						// apply correction for particle i
 						var particle = particles[i];
-						var correction = (-distance/2) / magnitude(particle.v);
+						var correction = (-distance/2+1) / magnitude(particle.v);
 						var reverseVelocity = {x: -particle.v.x, y: -particle.v.y};
 						var correctionVector = {x: correction * reverseVelocity.x, y: correction * reverseVelocity.y};
 						particle.p.x += correctionVector.x;
@@ -202,21 +217,29 @@
 						
 						// apply correction for particle j
 						var particle = particles[j];
-						var correction = (-distance/2) / magnitude(particle.v);
+						var correction = (-distance/2+1) / magnitude(particle.v);
 						var reverseVelocity = {x: -particle.v.x, y: -particle.v.y};
 						var correctionVector = {x: correction * reverseVelocity.x, y: correction * reverseVelocity.y};
 						particle.p.x += correctionVector.x;
 						particle.p.y += correctionVector.y;
 						
 						// compute new velocity for particle i
+						var massRatio = 1;//particles[j].m / (particles[i].m + particles[j].m);
 						var normal = {x: particles[i].p.x - particles[j].p.x, y: particles[i].p.y - particles[j].p.y};
-						var velocity = findReflection(particles[i].v, normal, particles[i].e);
+						var velocity = findReflection(particles[i].v, normal, particles[i].e, massRatio);
+						//if (velocity.x < velocityThreshold) velocity.x = 0;
+						//if (velocity.y < velocityThreshold) velocity.y = 0;
 						particles[i].v = velocity;
+						logVector("new particle " + i + " velocity", particles[i].v);
 						
 						// compute new velocity for particle i
+						var massRatio = 1;//particles[i].m / (particles[i].m + particles[j].m);
 						var normal = {x: particles[j].p.x - particles[i].p.x, y: particles[j].p.y - particles[i].p.y};
-						var velocity = findReflection(particles[j].v, normal, particles[j].e);
+						var velocity = findReflection(particles[j].v, normal, particles[j].e, massRatio);
+						//if (velocity.x < velocityThreshold) velocity.x = 0;
+						//if (velocity.y < velocityThreshold) velocity.y = 0;
 						particles[j].v = velocity;
+						logVector("new particle " + j + " velocity", particles[j].v);
 					}
 				}
 			}
@@ -235,7 +258,10 @@
 					
 					// compute the new velocity, a reflection of the current velocity
 					var velocity = findReflectionOnWall(lines[j].a, lines[j].b, particles[i].v, particles[i].e);
+					//if (velocity.x < velocityThreshold) velocity.x = 0;
+					//if (velocity.y < velocityThreshold) velocity.y = 0;
 					particles[i].v = velocity;
+					logVector("new particle " + i + " velocity", particles[i].v);
 				}
 			}
 		}
@@ -332,18 +358,19 @@
 		var ab = {x: b.x-a.x, y: b.y-a.y};
 		// compute the ccw normal vector of ab
 		var ccwab = {x: -ab.y, y: ab.x};
-		return findReflection(pc, ccwab, e);
+		return findReflection(pc, ccwab, e, 1);
 	}
 	
 	// find the reflection of the v vector using the n normal vector
 	// we also have the restitution coefficient e
-	function findReflection(v, n, e) {
+	// we also have mass ratio
+	function findReflection(v, n, e, m) {
 		// compute the dot product of n and itself
 		var n_n = n.x * n.x + n.y * n.y;
 		// compute the dot product of normal and v
 		var v_n = v.x * n.x + v.y * n.y;
 		// compute reflection
-		var factor = (1+e) * v_n / n_n;
+		var factor = m * (1+e) * v_n / n_n;
 		var r = {x: v.x - factor * n.x, y: v.y - factor * n.y};
 		return r;
 	}
@@ -381,14 +408,32 @@
 			</tr>
 			<tr>
 				<td>
-					no options
+					<label>velocity threshold:</label><input id="velocityThreshold"/>
 				</td>
 				<td>
-					<div id="console" style="height: 200px; width: 400px; overflow: scroll;"></div>
+					<div id="console" style="height: 200px; width: 600px; overflow: scroll;"></div>
 				</td>
 			</tr>
 			
 		</table>
+	</div>
+	
+	<div>
+		<h1>Notes:</h1>
+		<table>
+			<tr>
+				<th>Find the intersection point between two vectors</th>
+			</tr>
+			<tr>
+				<td><img alt="formulas1" src="page7_formulas1.jpg"></td>
+			</tr>
+		</table>
+	</div>
+	<div>
+		<h1>References:</h1>
+		<ul>
+			<li><a href="http://mathforum.org/library/drmath/view/62814.html">Find the intersection point between two vectors</a></li>
+		</ul>
 	</div>
 </body>
 </html>
