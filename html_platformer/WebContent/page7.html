@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Bouncy physics: collision detection and reflection</title>
+<title>Bouncy physics: particle collisions</title>
 <style>
 	td, th {
 		border: 1px solid black;
@@ -21,25 +21,30 @@
 <script>
 	// constants
 	var MOVE_STEP = 1;
-	var PARTICLE_RADIUS = 5;
-	var PARTICLES_NR = 15;
+	var PARTICLE_RADIUS = 50;
+	var PARTICLES_NR = 2;
+	var FPS = 30;
 	
 	
 	// class definitions
-	function Particle(p, v) {
+	function Particle(p, r, v,e) {
 		this.p = p;
 		this.v = v;
 		this.c = "#000000";
+		this.e = e; // restitution coefficient
+		this.r = r;
 		
 		this.move = function() {
 			this.p.x += this.v.x;
 			this.p.y += this.v.y;
+			this.v.x += gravity.x * dt;
+			this.v.y += gravity.y * dt;
 		}
 		
 		this.draw = function() {
 			canvas().fillStyle = this.c;
 			canvas().beginPath();
-			canvas().arc(this.p.x, this.p.y, particleRadius, 0, 2 * Math.PI, false);
+			canvas().arc(this.p.x, this.p.y, this.r, 0, 2 * Math.PI, false);
 			canvas().fill();
 		}
 	}
@@ -65,11 +70,14 @@
 	var particlesNr = PARTICLES_NR;
 	var particleRadius = PARTICLE_RADIUS;
 	
+	var gravity = {x: 0, y: 9.8};
+	var dt = 1/FPS; // number of seconds per frame
+	
 	
 	function startGame() {
 		// in case the game is running, stop it first
 		stopGame();
-		getGameVariables();
+		//getGameVariables();
 		// objects creation
 		/* var lineEnds = [{x: 50, y: 50},
 		                {x: 50, y: canvasHeight()-50},
@@ -86,11 +94,14 @@
 		}
 		lines[lineEnds.length-1] = new Line({x: lineEnds[lineEnds.length-1].x, y: lineEnds[lineEnds.length-1].y},
 				{x: lineEnds[0].x, y: lineEnds[0].y});
+		
 		var centerPoint = findCenterPoint(lines);
 		particles = new Array();
-		for (i=0; i<particlesNr; i++) {
-			particles[i] = new Particle({x: centerPoint.x, y: centerPoint.y}, {x: random(20) - 10 , y: random(20) - 10});
-		}
+		/* for (i=0; i<particlesNr; i++) {
+			particles[i] = new Particle({x: centerPoint.x, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
+		} */
+		particles[0] = new Particle({x: centerPoint.x-100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
+		particles[1] = new Particle({x: centerPoint.x+100, y: centerPoint.y}, particleRadius, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
 		
 		// start game
 		startAnimation();
@@ -127,7 +138,7 @@
 		}		
 	}
 	function startAnimation() {
-		var FPS = 30;
+		
 		gameHandle = setInterval(function() {
 			game();
 		}, 1000/FPS);
@@ -174,18 +185,51 @@
 	
 	function checkCollisions() {
 		for (i = 0; i < particles.length; i++) {
+			// check collisions with other particles
+			for (j = 0; j < particles.length; j++) {
+				if (i != j) {
+					var distance = Math.sqrt(
+							(particles[i].p.x - particles[j].p.x) * (particles[i].p.x - particles[j].p.x)
+							+ (particles[i].p.y - particles[j].p.y) * (particles[i].p.y - particles[j].p.y));
+					var distance = distance - particles[i].r - particles[j].r;
+					if (distance <= 0) {
+						log("particles " + i + " and " + j + " collide");
+						var normal = {x: particles[i].p.x - particles[j].p.x, y: particles[i].p.y - particles[j].p.y};
+						log("coordonates " + particles[i].p.x + " " + particles[j].p.x + " " + particles[i].p.y + " " + particles[j].p.y);
+						log("normal (" + normal.x + "," + normal.y + ")");
+						var velocity = findReflection(particles[i].v, normal, particles[i].e);
+						log("particle " + i + " new velocity (" + velocity.x + "," + velocity.y + ")");
+						particles[i].v = velocity;
+					}
+				}
+			}
+			// check collisions with walls
 			for (j = 0; j < lines.length; j++) {
 				// check if we have a collision
 				var distance = findProjectionDistance(lines[j].a, lines[j].b, particles[i].p);
-				log("particle " + i + " distance to line " + j + " is " + distance);
+				distance -= particles[i].r;
 				if (distance <= 0) {
 					// compute the new velocity, a reflection of the current velocity
-					var velocity = findReflection(lines[j].a, lines[j].b, particles[i].v);
+					var velocity = findReflectionOnWall(lines[j].a, lines[j].b, particles[i].v, particles[i].e);
 					particles[i].v = velocity;
-					log("particle " + i + " new velocity is (" + velocity.x + "," + velocity.y + ")");
 				}
 			}
 		}
+	}
+	
+	function findReflection(a, b, pc, e) {
+		// compute the ab vector
+		var ab = {x: b.x-a.x, y: b.y-a.y};
+		// compute the ccw normal vector of ab
+		var ccwab = {x: -ab.y, y: ab.x};
+		// compute the dot product of ab and itself
+		var ab_ab = ab.x * ab.x + ab.y * ab.y;
+		// compute the dot product of ccw normal of ab and pc
+		var pc_ccwab = pc.x * ccwab.x + pc.y * ccwab.y;
+		// compute reflection
+		var factor = (1+e) * pc_ccwab / ab_ab;
+		var cr = {x: pc.x - factor * ccwab.x, y: pc.y - factor * ccwab.y};
+		return cr;
 	}
 	
 	// points a and b form the line and we project c on the line, the projection point being p
@@ -220,19 +264,29 @@
 	}
 	
 	// find the reflection of the pc vector relative to the ab vector (pc is the speed vector, ab the collision line)
-	function findReflection(a, b, pc) {
+	// we also have the restitution coefficient e
+	function findReflectionOnWall(a, b, pc, e) {
 		// compute the ab vector
 		var ab = {x: b.x-a.x, y: b.y-a.y};
 		// compute the ccw normal vector of ab
 		var ccwab = {x: -ab.y, y: ab.x};
-		// compute the dot product of ab and itself
-		var ab_ab = ab.x * ab.x + ab.y * ab.y;
-		// compute the dot product of ccw normal of ab and pc
-		var pc_ccwab = pc.x * ccwab.x + pc.y * ccwab.y;
+		return findReflection(pc, ccwab, e);
+	}
+	
+	// find the reflection of the v vector using the n normal vector
+	// we also have the restitution coefficient e
+	function findReflection(v, n, e) {
+		// compute the dot product of n and itself
+		var n_n = n.x * n.x + n.y * n.y;
+		log("n_n=" + n_n);
+		// compute the dot product of normal and v
+		var v_n = v.x * n.x + v.y * n.y;
+		log("v_n=" + v_n);
 		// compute reflection
-		var factor = 2 * pc_ccwab / ab_ab;
-		var cr = {x: pc.x - factor * ccwab.x, y: pc.y - factor * ccwab.y};
-		return cr;
+		var factor = (1+e) * v_n / n_n;
+		log("factor=" + factor);
+		var r = {x: v.x - factor * n.x, y: v.y - factor * n.y};
+		return r;
 	}
 	
 	function findCenterPoint(lines) {
@@ -268,8 +322,7 @@
 			</tr>
 			<tr>
 				<td>
-					<label>particles number:</label><input id="particlesNr"/>
-					<label>particle radius:</label><input id="particleRadius"/>
+					no options
 				</td>
 				<td>
 					<div id="console" style="height: 200px; width: 400px; overflow: scroll;"></div>
@@ -277,40 +330,6 @@
 			</tr>
 			
 		</table>
-	</div>
-	
-	
-	
-	<div>
-		<h1>Notes:</h1>
-		<table>
-			<tr>
-				<th colspan="2">Calculating the distance between the particle and a line</th>
-			</tr>
-			<tr>
-				<td><img alt="drawing1" src="page5_drawing1.jpg"></td>
-				<td><img alt="formulas1" src="page5_formulas1.jpg"></td>
-			</tr>
-			<tr>
-				<th colspan="2">Calculating the reflection of the particle speed, required on collision</th>
-			</tr>
-			<tr>
-				<td><img alt="drawing2" src="page5_drawing2.jpg"></td>
-				<td><img alt="formulas2" src="page5_formulas2.jpg"></td>
-			</tr>
-		</table>
-		
-				
-	</div>
-	<div>
-		<h1>References:</h1>
-		<ul>
-			<li><a href="http://en.wikipedia.org/wiki/Euclidean_vector">Euclidean vector</a></li>
-			<li><a href="http://stackoverflow.com/questions/7469959/given-2-points-how-do-i-draw-a-line-at-a-right-angle-to-the-line-formed-by-the-t/7470098#7470098">A quick review</a></li>
-			<li><a href="http://en.wikipedia.org/wiki/Scalar_projection">Finding the scalar projection</a></li>
-			<li><a href="http://en.wikipedia.org/wiki/Vector_projection">Finding the vector rejection</a></li>
-			<li><a href="http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector">How to get a reflection vector</a>
-		</ul>
 	</div>
 </body>
 </html>

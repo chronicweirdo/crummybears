@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Bouncy physics: collision detection and reflection</title>
+<title>Bouncy physics: gravity and restitution coefficient</title>
 <style>
 	td, th {
 		border: 1px solid black;
@@ -22,18 +22,22 @@
 	// constants
 	var MOVE_STEP = 1;
 	var PARTICLE_RADIUS = 5;
-	var PARTICLES_NR = 15;
+	var PARTICLES_NR = 1;
+	var FPS = 30;
 	
 	
 	// class definitions
-	function Particle(p, v) {
+	function Particle(p, v, e) {
 		this.p = p;
 		this.v = v;
 		this.c = "#000000";
+		this.e = e; // restitution coefficient
 		
 		this.move = function() {
 			this.p.x += this.v.x;
 			this.p.y += this.v.y;
+			this.v.x += gravity.x * dt;
+			this.v.y += gravity.y * dt;
 		}
 		
 		this.draw = function() {
@@ -65,6 +69,9 @@
 	var particlesNr = PARTICLES_NR;
 	var particleRadius = PARTICLE_RADIUS;
 	
+	var gravity = {x: 0, y: 9.8};
+	var dt = 1/FPS; // number of seconds per frame
+	
 	
 	function startGame() {
 		// in case the game is running, stop it first
@@ -86,10 +93,11 @@
 		}
 		lines[lineEnds.length-1] = new Line({x: lineEnds[lineEnds.length-1].x, y: lineEnds[lineEnds.length-1].y},
 				{x: lineEnds[0].x, y: lineEnds[0].y});
+		
 		var centerPoint = findCenterPoint(lines);
 		particles = new Array();
 		for (i=0; i<particlesNr; i++) {
-			particles[i] = new Particle({x: centerPoint.x, y: centerPoint.y}, {x: random(20) - 10 , y: random(20) - 10});
+			particles[i] = new Particle({x: centerPoint.x, y: centerPoint.y}, {x: random(20) - 10 , y: random(20) - 10}, Math.random());
 		}
 		
 		// start game
@@ -127,7 +135,7 @@
 		}		
 	}
 	function startAnimation() {
-		var FPS = 30;
+		
 		gameHandle = setInterval(function() {
 			game();
 		}, 1000/FPS);
@@ -180,7 +188,7 @@
 				log("particle " + i + " distance to line " + j + " is " + distance);
 				if (distance <= 0) {
 					// compute the new velocity, a reflection of the current velocity
-					var velocity = findReflection(lines[j].a, lines[j].b, particles[i].v);
+					var velocity = findReflection(lines[j].a, lines[j].b, particles[i].v, particles[i].e);
 					particles[i].v = velocity;
 					log("particle " + i + " new velocity is (" + velocity.x + "," + velocity.y + ")");
 				}
@@ -220,7 +228,8 @@
 	}
 	
 	// find the reflection of the pc vector relative to the ab vector (pc is the speed vector, ab the collision line)
-	function findReflection(a, b, pc) {
+	// we also have the restitution coefficient e
+	function findReflection(a, b, pc, e) {
 		// compute the ab vector
 		var ab = {x: b.x-a.x, y: b.y-a.y};
 		// compute the ccw normal vector of ab
@@ -230,7 +239,7 @@
 		// compute the dot product of ccw normal of ab and pc
 		var pc_ccwab = pc.x * ccwab.x + pc.y * ccwab.y;
 		// compute reflection
-		var factor = 2 * pc_ccwab / ab_ab;
+		var factor = (1+e) * pc_ccwab / ab_ab;
 		var cr = {x: pc.x - factor * ccwab.x, y: pc.y - factor * ccwab.y};
 		return cr;
 	}
@@ -277,40 +286,6 @@
 			</tr>
 			
 		</table>
-	</div>
-	
-	
-	
-	<div>
-		<h1>Notes:</h1>
-		<table>
-			<tr>
-				<th colspan="2">Calculating the distance between the particle and a line</th>
-			</tr>
-			<tr>
-				<td><img alt="drawing1" src="page5_drawing1.jpg"></td>
-				<td><img alt="formulas1" src="page5_formulas1.jpg"></td>
-			</tr>
-			<tr>
-				<th colspan="2">Calculating the reflection of the particle speed, required on collision</th>
-			</tr>
-			<tr>
-				<td><img alt="drawing2" src="page5_drawing2.jpg"></td>
-				<td><img alt="formulas2" src="page5_formulas2.jpg"></td>
-			</tr>
-		</table>
-		
-				
-	</div>
-	<div>
-		<h1>References:</h1>
-		<ul>
-			<li><a href="http://en.wikipedia.org/wiki/Euclidean_vector">Euclidean vector</a></li>
-			<li><a href="http://stackoverflow.com/questions/7469959/given-2-points-how-do-i-draw-a-line-at-a-right-angle-to-the-line-formed-by-the-t/7470098#7470098">A quick review</a></li>
-			<li><a href="http://en.wikipedia.org/wiki/Scalar_projection">Finding the scalar projection</a></li>
-			<li><a href="http://en.wikipedia.org/wiki/Vector_projection">Finding the vector rejection</a></li>
-			<li><a href="http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector">How to get a reflection vector</a>
-		</ul>
 	</div>
 </body>
 </html>
