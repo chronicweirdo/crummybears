@@ -9,7 +9,7 @@
 	// constants
 	var MOVE_STEP = 1;
 	var PARTICLE_RADIUS = 5;
-	var PARTICLES_NR = 1;
+	var PARTICLES_NR = 15;
 	
 	
 	// class definitions
@@ -42,17 +42,24 @@
 	var particles = new Array();
 	var planeDistances = [400];
 	var planes = [ 
-	               /*{a: 1,  b: 0, c: 1}*/
+	               {a: 1,  b: 0, c: 1}
 	               /*{a: 0, b: -1, c: 1},*/
 	               /* {a: -1, b: 0, c: 1} */
-	               {a: 0,  b: 1, c: 1}
+	               /* {a: 0,  b: 1, c: 1} */
 	              ]; // actually normals to the planes
+	var lines;
 	
 	$(function() {
 		// objects creation
 		for (i=0; i<PARTICLES_NR; i++) {
-			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: /* random(5) */1, y: 3/* random(5) */});
+			particles[i] = new Particle({x: random(canvasWidth()), y: random(canvasHeight())}, {x: random(10) , y: random(10)});
 		}
+		lines = [
+	             {a: {x: 0, y: 0}, b: {x: 0, y: canvasHeight()}},
+	             {a: {x: 0, y: canvasHeight()}, b: {x: canvasWidth(), y: canvasHeight()}},
+	             {a: {x: canvasWidth(), y: canvasHeight()}, b: {x: canvasWidth(), y: 0}},
+	             {a: {x: canvasWidth(), y: 0}, b: {x: 0, y: 0}}
+	             ]
 		// start game
 		startAnimation();
 	});
@@ -89,7 +96,8 @@
 	}
 	function game() {
 		update();
-		checkCollisions();
+		//checkCollisions();
+		checkCollisionNew();
 		clear();
 		draw();
 	}
@@ -134,13 +142,104 @@
 	function stopGame() {
 		clearInterval(gameHandle);
 	}
+	
+	
+	
+	function checkCollisionNew() {
+		for (i = 0; i < particles.length; i++) {
+			for (j = 0; j < lines.length; j++) {
+				// check if we have a collision
+				var distance = findProjectionDistance(lines[j].a, lines[j].b, particles[i].p);
+				if (distance <= 0) {
+					// compute the new velocity, a reflection of the current velocity
+					var velocity = findReflection(lines[j].a, lines[j].b, particles[i].v);
+					particles[i].v = velocity;
+				}
+			}
+		}
+	}
+	
+	// points a and b form the line and we project c on the line, the projection point being p
+	function findProjectionDistance(a, b, c) {
+		// compute the line vectors ab and ac
+		var ab = {x: b.x-a.x, y: b.y-a.y};
+		var ac = {x: c.x-a.x, y: c.y-a.y};
+		// compute the scalar projection of c on ab
+		var ab_ac = ab.x * ac.x + ab.y * ac.y; // dot product of ab and ac
+		var labl = Math.sqrt(ab.x*ab.x + ab.y*ab.y); // scalar size of ab
+		var s = ab_ac / labl; // the scalar projection
+		// compute the vector projection of c on ab (vector from a to p) - verify if correct!
+		var ab_ab = ab.x * ab.x + ab.y * ab.y // dot product of ab and itself
+		var vpf = ab_ac / ab_ab; // vector projection factor
+		var ap = {x: vpf * ab.x, y: vpf * ab.y}; // vector projection
+		// compute the vector rejection of c on ab (perpendicular from c to ab)
+		var pc = {x: ac.x - ap.x, y: ac.y - ap.y}; // vector rejection
+		// compute the size of the vector rejection
+		var lpcl = Math.sqrt(pc.x*pc.x + pc.y*pc.y);
+		// compute the normal vector of ab to left (ccw) and right (cw) - we will use the left
+		var ccwab = {x: -ab.y, y: ab.x};
+		var cwab = {x: ab.y, y: -ab.x};
+		// compute the unit (normalized) normal vector
+		var nccwab = {x: ccwab.x / labl, y: ccwab.y / labl};
+		// compute distance of C from AB using the unit ccw normal vector
+		var ccwd = pc.x * nccwab.x + pc.y * nccwab.y;
+		// if this distance is larger than 0, point c is to the left of ab, or we have to rotate ab ccw to touch c
+		return ccwd;
+	}
+	
+	// find the reflection of the pc vector relative to the ab vector (pc is the speed vector, ab the collision line)
+	function findReflection(a, b, pc) {
+		// compute the ab vector
+		var ab = {x: b.x-a.x, y: b.y-a.y};
+		// compute the ccw normal vector of ab
+		var ccwab = {x: -ab.y, y: ab.x};
+		// compute the dot product of ab and itself
+		var ab_ab = ab.x * ab.x + ab.y * ab.y;
+		// compute the dot product of ccw normal of ab and pc
+		var pc_ccwab = pc.x * ccwab.x + pc.y * ccwab.y;
+		// compute reflection
+		var factor = 2 * pc_ccwab / ab_ab;
+		var cr = {x: pc.x - factor * ccwab.x, y: pc.y - factor * ccwab.y};
+		return cr;
+	}
 
 </script>
 </head>
 <body>
 	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
 	<div id="console" style="height: 200px; overflow: scroll;"></div>
-	<a onclick="javascript:clearLog()">clear</a>
-	<a onclick="javascript:stopGame()">stop</a>
+	<button onclick="javascript:clearLog()">clear</button>
+	<button onclick="javascript:stopGame()">stop</button>
+	<div>
+		<h1>References:</h1>
+		<table>
+			<tr>
+				<th>Calculating the distance between the particle and a line</th>
+			</tr>
+			<tr>
+				<td style="vertical-align: top"><img alt="drawing1" src="page5_drawing1.jpg"></td>
+				<td><img alt="formulas1" src="page5_formulas1.jpg"></td>
+			</tr>
+			<tr>
+				<th>Calculating the reflection of the particle speed, required on collision</th>
+			</tr>
+			<tr>
+				<td style="vertical-align: top"><img alt="drawing2" src="page5_drawing2.jpg"></td>
+				<td><img alt="formulas2" src="page5_formulas2.jpg"></td>
+			</tr>
+		</table>
+		
+				
+	</div>
+	<div>
+		<h1>References:</h1>
+		<ul>
+			<li><a href="http://en.wikipedia.org/wiki/Euclidean_vector">Euclidean vector</a></li>
+			<li><a href="http://stackoverflow.com/questions/7469959/given-2-points-how-do-i-draw-a-line-at-a-right-angle-to-the-line-formed-by-the-t/7470098#7470098">A quick review</a></li>
+			<li><a href="http://en.wikipedia.org/wiki/Scalar_projection">Finding the scalar projection</a></li>
+			<li><a href="http://en.wikipedia.org/wiki/Vector_projection">Finding the vector rejection</a></li>
+			<li><a href="http://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector">How to get a reflection vector</a>
+		</ul>
+	</div>
 </body>
 </html>
