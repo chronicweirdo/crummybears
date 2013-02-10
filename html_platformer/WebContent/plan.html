@@ -3,9 +3,20 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Plan</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script>
+	$(function() {
+		$('#toc > li').each(function (index, el){
+			var link = 'page' + (index+1) + '.html';
+			var title = $(el).html();
+			var newHtml = '<a href="' + link + '">' + title + '</a>';
+			$(el).html(newHtml);
+		});
+	});
+</script>
 </head>
 <body>
-<ol>
+<ol id="toc">
 	<li>Create canvas and draw on it</li>
 	<li>Create animation</li>
 	<li>Read keys and control object</li>
@@ -13,6 +24,7 @@
 	<li>Bouncy physics: collision detection and reflection</li>
 	<li>Bouncy physics: gravity and restitution coefficient</li>
 	<li>Bouncy physics: particle collisions</li>
+	<li>Block collisions and corrections</li>
 	<li>Jumping Jack</li>
 	<li>Jumping Colliding Jack</li>
 	<li>Direction aware physics (fall-through platform)</li>
