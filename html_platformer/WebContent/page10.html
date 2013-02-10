@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Jumping Colliding Jack</title>
+<style>
+	td, th {
+		border: 1px solid black;
+		vertical-align: top;
+	}
+	label {
+		float: left;
+		clear: left;
+	}
+	input {
+		float: left;
+	}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	//constants
+	var FPS = 30;
+	var JUMP_TIME_THRESHOLD = 30;
+	
+	var block;
+	var wall;
+	var game;
+	var gravity = {x: 0, y: 9.8};
+	var friction = 0.8;
+	var dt = 1/FPS; // number of seconds per frame
+	var playerSpeed = {x: 0, y: 0};
+	var jumpTime = 0;
+	
+	$(function() {
+		// left wall
+		block = new Block({x: 500, y: 200}, {x: 10, y: 15}, {x: 0, y: 0}, "#00FF00", false);
+		/*var block2 = new Block({x: 700, y: 50}, {x: 25, y: 40}, {x: 0, y: 0}, "#0000FF", false);
+		floor = new Block({x: 500, y: 300}, {x: 395, y: 45}, {x: 0, y: 0}, "#000000", true);
+		var objects = [floor, block, block2]; */
+		var objects = new Array();
+		objects[0] = block;
+		objects[1] = new Block({x: 500, y: 375}, {x: 500, y: 15}, {x: 0, y: 0}, "#000000", true); // the floor
+		objects[2] = new Block({x: 500, y: 25}, {x: 500, y: 15}, {x: 0, y: 0}, "#000000", true); // the ceiling
+		objects[3] = new Block({x: 25, y: 200}, {x: 15, y: 200}, {x: 0, y: 0}, "#000000", true); // the left wall
+		objects[4] = new Block({x: 975, y: 200}, {x: 15, y: 200}, {x: 0, y: 0}, "#000000", true); // the right wall
+		objects[5] = new Block({x: 700, y: 200}, {x: 25, y: 40}, {x: 0, y: 0}, "#0000FF", false); // a mobile object
+		
+		objects[6] = new Block({x: 100, y: 100}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 1
+		objects[14] = new Block({x: 100, y: 70}, {x: 10, y: 10}, {x: 0, y: 0}, "#0000FF", false); // a mobile object on the first ledge
+		objects[7] = new Block({x: 120, y: 130}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 2
+		objects[8] = new Block({x: 140, y: 160}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 3
+		objects[9] = new Block({x: 160, y: 190}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 4
+		objects[10] = new Block({x: 180, y: 220}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 5
+		objects[11] = new Block({x: 200, y: 250}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 6
+		objects[12] = new Block({x: 220, y: 280}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 7
+		objects[13] = new Block({x: 240, y: 310}, {x: 10, y: 5}, {x: 0, y: 0}, "#000000", true); // ledge 8
+		
+		game = new Game(objects);
+		bindKeys();
+	});
+
+		
+	
+	// class definitions
+	function Block(position, dimension, velocity, color, fixed) {
+		this.position = position; // center of the block
+		this.dimension = dimension; // these are 'radiuses' of the block, so width would be dimension.x * 2
+		this.velocity = velocity;
+		this.color = color;
+		this.fixed = fixed;
+		this.mobile = !fixed;
+		this.speed = {x: 0, y: 0};
+		
+		this.move = function() {
+			if (!fixed) {
+				this.velocity.x = this.velocity.x * friction;
+				if (this.speed.x != 0) this.velocity.x = this.speed.x;
+				this.velocity.y += gravity.y * dt;
+				if (this.speed.y != 0) this.velocity.y = this.speed.y;
+				this.position.x += this.velocity.x;
+				this.position.y += this.velocity.y;
+			}
+		}
+		
+		this.draw = function() {
+			canvas().fillStyle = this.color;
+			canvas().fillRect(this.position.x - this.dimension.x, this.position.y - this.dimension.y,
+					this.dimension.x*2, this.dimension.y*2);
+		}
+		
+		this.rect = function() {
+			return {cx: this.position.x, cy: this.position.y,
+				hh: this.dimension.y, hw: this.dimension.x}
+		}
+	}
+	
+	function Game(objects) {
+		this.handle;
+		this.objects = objects;
+		
+		this.start = function() {
+			// in case the game is running, stop it first
+			this.stop();
+			
+			// start game
+			this.animate();
+		}
+		
+		this.stop = function() {
+			clearInterval(this.handle);
+		}
+		
+		this.update = function() {
+			for (i = 0; i < objects.length; i++) {
+				this.objects[i].move();
+			}
+		}
+		this.clear = function() {
+			canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+		}
+		this.draw = function() {
+			for (i = 0; i < objects.length; i++) {
+				this.objects[i].draw();
+			}
+		}
+		this.animate = function() {
+			this.handle = setInterval(function() {
+				game.main();
+			}, 1000/FPS);
+		}
+		
+		this.collisions = function() {
+			for (i = 0; i < objects.length; i++) {
+				for (j = i+1; j < objects.length; j++) {
+					var collision = collide(objects[i], objects[j]);
+					if (collision.c) {
+						handleCollision(objects[i], objects[j], collision);
+					}/*  else {
+						block.color = '#00FF00';
+					} */
+				}
+			}
+			
+		}
+		
+		this.main = function() {
+			this.update();
+			this.collisions();
+			this.clear();
+			this.draw();
+		}
+	}
+
+	function random(max) {
+		return Math.floor(Math.random()*max);
+	}
+	
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	
+	function handleCollision(block1, block2, collision) {
+		jumpTime = 0;
+
+		//log("collision " + collision.dx + " " + collision.dy);
+		// decide which way the blocks must move
+		if (Math.abs(collision.dx) > Math.abs(collision.dy)) {
+			// move back on the y axis
+			// decide if both blocks must move
+			if (block1.mobile && block2.mobile) {
+				//log("moving back block 1 and 2 on y");
+				// both blocks move
+				// get vector between blocks, the component of the direction of correction
+				var sign1 = block2.position.y - block1.position.y;
+				sign1 = sign1 / Math.abs(sign1);
+				var sign2 = -sign1;
+				block1.position.y += collision.dy/2 * sign1;
+				block1.velocity.y = 0;
+				block2.position.y += collision.dy/2 * sign2;
+				block2.velocity.y = 0;
+			} else if (block1.mobile) {
+				//log("moving back block 1 on y");
+				var sign = block2.position.y - block1.position.y;
+				sign = sign / Math.abs(sign);
+				block1.position.y += collision.dy * sign;
+				block1.velocity.y = 0; 
+			} else if (block2.mobile) {
+				//log("moving back block 2 on y");
+				var sign = block1.position.y - block2.position.y;
+				sign = sign / Math.abs(sign);
+				block2.position.y += collision.dy * sign;
+				block2.velocity.y = 0;
+			}
+		} else {
+			// move back on the x axis
+			if (block1.mobile && block2.mobile) {
+				//log("moving back block 1 and 2 on x");
+				// both blocks move
+				var sign1 = block2.position.x - block1.position.x;
+				sign1 = sign1 / Math.abs(sign1);
+				var sign2 = -sign1;
+				block1.position.x += collision.dx/2 * sign1;
+				block1.velocity.x = 0;
+				block2.position.x += collision.dx/2 * sign2;
+				block2.velocity.x = 0;
+			} else if (block1.mobile) {
+				//log("moving back block 1 on x");
+				var sign = block2.position.x - block1.position.x;
+				sign = sign / Math.abs(sign);
+				block1.position.x += collision.dx * sign;
+				block1.velocity.x = 0; 
+			} else if (block2.mobile) {
+				//log("moving back block 2 on x");
+				var sign = block1.position.x - block2.position.x;
+				sign = sign / Math.abs(sign);
+				block2.position.x += collision.dx * sign;
+				block2.velocity.x = 0;
+			}
+		}
+	}
+	
+	
+	
+	function collide(object1, object2) {
+		var r1 = object1.rect();
+		var r2 = object2.rect();
+		var dx = Math.abs(r1.cx - r2.cx) - (r1.hw + r2.hw);
+		var dy = Math.abs(r1.cy - r2.cy) - (r1.hh + r2.hh);
+		return {c: (dx < 0) && (dy < 0), dx: dx, dy: dy}
+	}
+	
+	function magnitude(v) {
+		return Math.sqrt(v.x * v.x + v.y * v.y);
+	}
+	
+	// split vector v in its (vector) x and (vector) y components by obtaining the projections
+	function splitVector(v, x, y) {
+		var pvx = projectVector(v, x);
+		var pvy = projectVector(v, y);
+		return {px: pvx, py: pvy};
+	}
+	
+	// project vector v on vector w and return the vector projection p
+	function projectVector(v, w) {
+		//log("project vector")
+		//logVector("v", v);
+		//logVector("w", w);
+		var w_w = w.x * w.x + w.y * w.y; // dot product of w and itself
+		//log("w_w " + w_w);
+		var v_w = v.x * w.x + v.y * w.y; // dot product of v and w
+		//log("v_w " + v_w);
+		var f = v_w / w_w; // vector projection factor
+		//log("f " + f);
+		var p = {x: f * w.x, y: f * w.y};
+		//logVector("p", p);
+		return p;
+	}
+	
+	function log(text) {
+		$('#console').prepend(text + '<br />');
+	}
+	
+	function clearLog() {
+		$('#console').empty();
+	}
+	
+	function logVector(name, v) {
+		log(name + " = (" + v.x + "," + v.y + ")");
+	}
+	
+	function bindKeys() {
+		$(document).bind("keydown", "left", function() {
+			block.speed.x = -5;
+		});
+		$(document).bind("keyup", "left", function() {
+			block.speed.x = 0;
+		});
+		$(document).bind("keydown", "right", function() {
+			block.speed.x = 5;
+		});
+		$(document).bind("keyup", "right", function() {
+			block.speed.x = 0;
+		});
+		$(document).bind("keydown", "space", function() {
+			if (jumpTime < JUMP_TIME_THRESHOLD) {
+				block.speed.y = -5;
+				jumpTime += 1;
+			} else {
+				block.speed.y = 0;
+			}
+		});
+		$(document).bind("keyup", "space", function() {
+			block.speed.y = 0;
+		});
+	}
+	
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+	<div>
+		<table style="width: 100%">
+			<tr>
+				<th>Game settings</th>
+				<th>Console</th>
+			</tr>
+			<tr>
+				<td>
+					<button onclick="javascript:game.start()">start</button>
+					<button onclick="javascript:game.stop()">stop</button>
+				</td>
+				<td>
+					<button onclick="javascript:clearLog()">clear console</button>
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Use keys: "left", "right" and "space".
+				</td>
+				<td>
+					<div id="console" style="height: 200px; width: 600px; overflow: scroll;"></div>
+				</td>
+			</tr>
+			
+		</table>
+	</div>
+</body>
+</html>

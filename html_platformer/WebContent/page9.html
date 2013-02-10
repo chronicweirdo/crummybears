@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Jumping Jack</title>
+<style>
+	td, th {
+		border: 1px solid black;
+		vertical-align: top;
+	}
+	label {
+		float: left;
+		clear: left;
+	}
+	input {
+		float: left;
+	}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	//constants
+	var FPS = 30;
+	var JUMP_TIME_THRESHOLD = 30;
+	
+	var block;
+	var wall;
+	var game;
+	var gravity = {x: 0, y: 9.8};
+	var friction = 0.8;
+	var dt = 1/FPS; // number of seconds per frame
+	var playerSpeed = {x: 0, y: 0};
+	var jumpTime = 0;
+	
+	$(function() {
+		// left wall
+		block = new Block({x: 500, y: 50}, {x: 25, y: 40}, {x: 0, y: 0}, "#00FF00");
+		floor = new Wall({x: 500, y: 300}, {x: 395, y: 45}, "#000000");
+		var objects = [floor, block];
+		game = new Game(objects);
+		bindKeys();
+	});
+
+		
+	
+	// class definitions
+	function Block(position, dimension, velocity, color) {
+		this.position = position; // center of the block
+		this.dimension = dimension; // these are 'radiuses' of the block, so width would be dimension.x * 2
+		this.velocity = velocity;
+		this.color = color;
+		
+		this.move = function() {
+			logVector("player speed", playerSpeed);
+			
+			this.velocity.x = this.velocity.x * friction;
+			if (playerSpeed.x != 0) this.velocity.x = playerSpeed.x;
+			this.velocity.y += gravity.y * dt;
+			if (playerSpeed.y != 0) this.velocity.y = playerSpeed.y;
+			logVector("player velocity", this.velocity);
+			logVector("player position before", this.position);
+			this.position.x += this.velocity.x;
+			this.position.y += this.velocity.y;
+			logVector("player position after", this.position);
+		}
+		
+		this.draw = function() {
+			canvas().fillStyle = this.color;
+			canvas().fillRect(this.position.x - this.dimension.x, this.position.y - this.dimension.y,
+					this.dimension.x*2, this.dimension.y*2);
+		}
+		
+		this.rect = function() {
+			return {cx: this.position.x, cy: this.position.y,
+				hh: this.dimension.y, hw: this.dimension.x}
+		}
+	}
+	
+	function Wall(position, dimension, color) {
+		this.position = position; // center of the block
+		this.dimension = dimension; // these are 'radiuses' of the block, so width would be dimension.x * 2
+		this.color = color;
+		
+		this.move = function() {
+		}
+		
+		this.draw = function() {
+			canvas().fillStyle = this.color;
+			canvas().fillRect(this.position.x - this.dimension.x, this.position.y - this.dimension.y,
+					this.dimension.x*2, this.dimension.y*2);
+		}
+		
+		this.rect = function() {
+			return {cx: this.position.x, cy: this.position.y,
+				hh: this.dimension.y, hw: this.dimension.x}
+		}
+	}
+	
+	function Game(objects) {
+		this.handle;
+		this.objects = objects;
+		
+		this.start = function() {
+			// in case the game is running, stop it first
+			this.stop();
+			
+			// start game
+			this.animate();
+		}
+		
+		this.stop = function() {
+			clearInterval(this.handle);
+		}
+		
+		this.update = function() {
+			for (i = 0; i < objects.length; i++) {
+				this.objects[i].move();
+			}
+		}
+		this.clear = function() {
+			canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+		}
+		this.draw = function() {
+			for (i = 0; i < objects.length; i++) {
+				this.objects[i].draw();
+			}
+		}
+		this.animate = function() {
+			this.handle = setInterval(function() {
+				game.main();
+			}, 1000/FPS);
+		}
+		
+		this.main = function() {
+			this.update();
+			checkCollisions();
+			this.clear();
+			this.draw();
+		}
+	}
+
+	function random(max) {
+		return Math.floor(Math.random()*max);
+	}
+	
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	
+	function checkCollisions() {
+		var collision = collide(block, floor);
+		if (collision.c) {
+			jumpTime = 0;
+			//block.color = '#FF0000';
+			// handle collision
+			//if (!(block.velocity.x == 0 && block.velocity.y ==0)) {
+				//logVector("initial position", block.position);
+				// move block to collision point
+				var splitVelocity = splitVector(block.velocity, {x: 1, y: 0}, {x: 0, y: 1}); // obtain split velocity
+				//logVector("split velocity x", splitVelocity.px);
+				//logVector("split velocity y", splitVelocity.py);
+				var xf = collision.dx / magnitude(splitVelocity.px); // obtain x intrusion in velocity %
+				var yf = collision.dy / magnitude(splitVelocity.py);
+				
+				var f = xf;
+				var nv = splitVelocity.py;
+				var returnVelocity = {x: block.velocity.x * xf, y: 0};
+				if (Math.abs(yf) < Math.abs(xf)) {
+					f = yf;
+					var nv = splitVelocity.px;
+					var returnVelocity = {x: 0, y: block.velocity.y * yf};
+				}
+				log("intrusion factors: " + xf + " " + yf + " " + f);
+				
+				logVector("return velocity", returnVelocity);
+				block.position.x += returnVelocity.x;
+				block.position.y += returnVelocity.y;
+				//logVector("final position", block.position);
+				// stop block
+				block.velocity = nv;
+			//}
+		} else {
+			block.color = '#00FF00';
+		}
+	}
+	
+	function collide(object1, object2) {
+		var r1 = object1.rect();
+		var r2 = object2.rect();
+		var dx = Math.abs(r1.cx - r2.cx) - (r1.hw + r2.hw);
+		var dy = Math.abs(r1.cy - r2.cy) - (r1.hh + r2.hh);
+		return {c: (dx < 0) && (dy < 0), dx: dx, dy: dy}
+	}
+	
+	function magnitude(v) {
+		return Math.sqrt(v.x * v.x + v.y * v.y);
+	}
+	
+	// split vector v in its (vector) x and (vector) y components by obtaining the projections
+	function splitVector(v, x, y) {
+		var pvx = projectVector(v, x);
+		var pvy = projectVector(v, y);
+		return {px: pvx, py: pvy};
+	}
+	
+	// project vector v on vector w and return the vector projection p
+	function projectVector(v, w) {
+		//log("project vector")
+		//logVector("v", v);
+		//logVector("w", w);
+		var w_w = w.x * w.x + w.y * w.y; // dot product of w and itself
+		//log("w_w " + w_w);
+		var v_w = v.x * w.x + v.y * w.y; // dot product of v and w
+		//log("v_w " + v_w);
+		var f = v_w / w_w; // vector projection factor
+		//log("f " + f);
+		var p = {x: f * w.x, y: f * w.y};
+		//logVector("p", p);
+		return p;
+	}
+	
+	function log(text) {
+		$('#console').prepend(text + '<br />');
+	}
+	
+	function clearLog() {
+		$('#console').empty();
+	}
+	
+	function logVector(name, v) {
+		log(name + " = (" + v.x + "," + v.y + ")");
+	}
+	
+	function bindKeys() {
+		$(document).bind("keydown", "left", function() {
+			playerSpeed.x = -5;
+		});
+		$(document).bind("keyup", "left", function() {
+			playerSpeed.x = 0;
+		});
+		$(document).bind("keydown", "right", function() {
+			playerSpeed.x = 5;
+		});
+		$(document).bind("keyup", "right", function() {
+			playerSpeed.x = 0;
+		});
+		$(document).bind("keydown", "space", function() {
+			if (jumpTime < JUMP_TIME_THRESHOLD) {
+				playerSpeed.y = -5;
+				jumpTime += 1;
+			} else {
+				playerSpeed.y = 0;
+			}
+		});
+		$(document).bind("keyup", "space", function() {
+			playerSpeed.y = 0;
+		});
+	}
+	
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+	<div>
+		<table style="width: 100%">
+			<tr>
+				<th>Game settings</th>
+				<th>Console</th>
+			</tr>
+			<tr>
+				<td>
+					<button onclick="javascript:game.start()">start</button>
+					<button onclick="javascript:game.stop()">stop</button>
+				</td>
+				<td>
+					<button onclick="javascript:clearLog()">clear console</button>
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+				<td>
+					<div id="console" style="height: 200px; width: 600px; overflow: scroll;"></div>
+				</td>
+			</tr>
+			
+		</table>
+	</div>
+</body>
+</html>
