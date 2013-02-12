@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Analyze image data: read image pixels</title>
+<style>
+	td, th {
+		border: 1px solid black;
+		vertical-align: top;
+	}
+	label {
+		float: left;
+		clear: left;
+	}
+	input {
+		float: left;
+	}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script>
+	//constants
+
+	$(function() {
+		// import image
+		var img = new Image();
+		img.onload = function(){
+			canvas().drawImage(this,0,0);
+			var width = img.naturalWidth;
+			var height = img.naturalHeight;
+			var imgData = canvas().createImageData(width, height);
+			// print row x
+			var x = 1;
+			for (i = 0; i < width; i++) {
+				log(imgData.data[x*canvas.width+i*4]);
+			}
+		};
+		img.src = 'home_outline.png';
+		
+	});
+
+	function random(max) {
+		return Math.floor(Math.random()*max);
+	}
+	
+	function canvas() {
+		return $('#myCanvas').get(0).getContext('2d');
+	}
+	function canvasWidth() {
+		return $('#myCanvas').first().width();
+	}
+	function canvasHeight() {
+		return $('#myCanvas').first().height();
+	}
+	
+	function log(text) {
+		$('#console').prepend(text + '<br />');
+	}
+	
+	function clearLog() {
+		$('#console').empty();
+	}
+	
+	function logVector(name, v) {
+		log(name + " = (" + v.x + "," + v.y + ")");
+	}
+	
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="1000" height="400" style="border:1px solid #000000;"></canvas>
+	<div>
+		<table style="width: 100%">
+			<tr>
+				<th>Game settings</th>
+				<th>Console</th>
+			</tr>
+			<tr>
+				<td>
+					<button onclick="javascript:game.start()">start</button>
+					<button onclick="javascript:game.stop()">stop</button>
+				</td>
+				<td>
+					<button onclick="javascript:clearLog()">clear console</button>
+					
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Use keys:
+					<ul>
+						<li>"left"</li>
+						<li>"right"</li>
+						<li>"space" - jump, multiple jumps</li>
+						<li>"down" - collapse through red platforms</li>
+					</ul>
+				</td>
+				<td>
+					<div id="console" style="height: 200px; width: 600px; overflow: scroll;"></div>
+				</td>
+			</tr>
+			
+		</table>
+	</div>
+</body>
+</html>

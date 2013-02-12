@@ -14,7 +14,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="house.svg"
    enable-background="new"
    inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\house.png"
@@ -51,7 +51,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.12374369"
-     inkscape:cx="278.31157"
+     inkscape:cx="-748.00339"
      inkscape:cy="3134.8824"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -749,7 +749,7 @@
            sodipodi:cy="-616.20923"
            sodipodi:rx="22.857143"
            sodipodi:ry="22.857143"
-           d="m 631.42855,-616.20923 a 22.857143,22.857143 0 1 1 -45.71428,0 22.857143,22.857143 0 1 1 45.71428,0 z"
+           d="m 631.42855,-616.20923 c 0,12.62365 -10.23349,22.85714 -22.85714,22.85714 -12.62365,0 -22.85714,-10.23349 -22.85714,-22.85714 0,-12.62365 10.23349,-22.85714 22.85714,-22.85714 12.62365,0 22.85714,10.23349 22.85714,22.85714 z"
            transform="matrix(0.65624998,0,0,0.65624998,146.33932,5.606654)" />
       </g>
     </g>
@@ -3676,6 +3676,13 @@
            transform="matrix(-0.96592583,-0.25881905,0.25881905,-0.96592583,0,0)" />
       </g>
     </g>
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       d="M -982.3125 -4218.5938 L -982.3125 -3018.5938 L 917.6875 -3018.5938 L 917.6875 -4218.5938 L -982.3125 -4218.5938 z M -182.3125 -4018.5938 L 117.6875 -4018.5938 L 117.6875 -3918.5938 L 267.6875 -3918.5938 L 267.6875 -3818.5938 L 417.6875 -3818.5938 L 417.6875 -3718.5938 L 717.6875 -3718.5938 L 717.6875 -3218.5938 L -782.3125 -3218.5938 L -782.3125 -3718.5938 L -482.3125 -3718.5938 L -482.3125 -3818.5938 L -332.3125 -3818.5938 L -332.3125 -3918.5938 L -182.3125 -3918.5938 L -182.3125 -4018.5938 z "
+       id="rect6256-1"
+       inkscape:export-filename="C:\Workspaces\crummybears\crummybears\html_platformer\WebContent\home_outline.png"
+       inkscape:export-xdpi="23.700001"
+       inkscape:export-ydpi="23.700001" />
   </g>
   <g
      inkscape:groupmode="layer"
