@@ -28,14 +28,28 @@
 			canvas().drawImage(this,0,0);
 			var width = img.naturalWidth;
 			var height = img.naturalHeight;
-			var imgData = canvas().createImageData(width, height);
+			var imgData = canvas().getImageData(0, 0, width, height);
+			//for (i = 0; i < imgData.data.length; i++)
+				//log(imgData.data[i]);
+			log(imgData.data.length);
 			// print row x
-			var x = 1;
-			for (i = 0; i < width; i++) {
-				log(imgData.data[x*canvas.width+i*4]);
+			//var x = 100;
+			var string = "";
+			var zeros = 0;
+			var others = 0;
+			for (y = 0; y < height; y++) {
+				for (x = 0; x < width; x++) {
+					var val = imgData.data[y*width+x];
+					if (val == 0) zeros += 1;
+					else others+=1;
+					
+				}
 			}
+			//log(string);
+			log(zeros + " " + others);
 		};
-		img.src = 'home_outline.png';
+		//img.src = 'home_outline.png';
+		img.src = 'rect3523.png';
 		
 	});
 
