@@ -29,8 +29,8 @@
 			//cornerHistogram(this);
 			extractBlocks(this, corners, this.naturalWidth, this.naturalHeight);
 		};
-		img.src = 'home_outline.png';
-		//img.src = 'corner_detection.png';
+		//img.src = 'home_outline.png';
+		img.src = 'corner_detection.png';
 		
 	});
 	
@@ -42,8 +42,8 @@
 			projx[corners[i].x] = 1;
 			projy[corners[i].y] = 1;
 		}
-		projx[0] = 1; projy[0] = 1;
-		projx[width] = 1; projy[height] = 1;
+		//projx[0] = 1; projy[0] = 1;
+		//projx[width] = 1; projy[height] = 1;
 		var x = new Array();
 		for (i = 0; i < projx.length; i++) {
 			if (projx[i] == 1) {
@@ -127,6 +127,53 @@
 		var corners = new Array();
 		var x = 1;
 		var y = 1;
+		
+		// detect edge corners (changes in black-white across edge)
+		for (y = 1; y < height-1; y++) {
+			// find on left edge
+			var x = 0;
+			var p = (y * width + x) * 4;
+			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+				var p_1 = ((y-1) * width + x) * 4;
+				var p1 = ((y+1) * width + x) * 4;
+				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+					corners[corners.length] = {x: x, y: y};
+				}
+			}
+			// find on right edge
+			var x = width-1;
+			var p = (y * width + x) * 4;
+			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+				var p_1 = ((y-1) * width + x) * 4;
+				var p1 = ((y+1) * width + x) * 4;
+				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+					corners[corners.length] = {x: x, y: y};
+				}
+			}
+		}
+		for (x = 1; x < width-1; x++) {
+			// find on top edge
+			var y = 0;
+			var p = (y * width + x) * 4;
+			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+				var p_1 = (y * width + x - 1) * 4;
+				var p1 = (y * width + x + 1) * 4;
+				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+					corners[corners.length] = {x: x, y: y};
+				}
+			}
+			// find on bottom edge
+			var y = height-1;
+			var p = (y * width + x) * 4;
+			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+				var p_1 = (y * width + x - 1) * 4;
+				var p1 = (y * width + x + 1) * 4;
+				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+					corners[corners.length] = {x: x, y: y};
+				}
+			}
+		}
+		// detect middle image corners
 		for (y = 1; y < height-1; y++) {
 			for (x = 1; x < width-1; x++) {
 				var p = (y * width + x) * 4;
@@ -150,6 +197,12 @@
 				
 			}
 		}
+		// add image corners as corners
+		corners[corners.length] = {x: 0, y: 0};
+		corners[corners.length] = {x: 0, y: height-1};
+		corners[corners.length] = {x: width-1, y: height-1};
+		corners[corners.length] = {x: width-1, y: 0};
+		// detect 
 		//canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
 		for (i = 0; i < corners.length; i++) {
 			logVector(i + " = ", corners[i]);
