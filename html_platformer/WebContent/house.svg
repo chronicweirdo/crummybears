@@ -14,7 +14,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="house.svg"
    enable-background="new"
    inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\house.png"
@@ -50,9 +50,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70000002"
-     inkscape:cx="-257.45998"
-     inkscape:cy="3789.109"
+     inkscape:zoom="3.9597981"
+     inkscape:cx="-357.28713"
+     inkscape:cy="3586.8333"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -3700,27 +3700,49 @@
        inkscape:export-ydpi="23.700001"
        inkscape:connector-curvature="0" />
     <g
-       id="g3505"
-       transform="matrix(0.26,0,0,0.26,-293.88571,-1857.7662)"
-       inkscape:export-filename="C:\Workspaces\crummybears\crummybears\html_platformer\WebContent\rect3523.png"
-       inkscape:export-xdpi="90"
-       inkscape:export-ydpi="90">
+       id="g3564"
+       inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\corner_detection.png"
+       inkscape:export-xdpi="900"
+       inkscape:export-ydpi="900">
       <rect
          inkscape:export-ydpi="23.700001"
          inkscape:export-xdpi="23.700001"
-         y="-2610.4949"
+         y="-2550.4949"
          x="-397.14285"
-         height="100"
-         width="100"
+         height="40"
+         width="40"
          id="rect3523"
          style="fill:#000000;fill-opacity:1;stroke:none" />
       <rect
-         y="-2585.4949"
-         x="-372.14285"
-         height="50"
-         width="50"
+         y="-2540.4949"
+         x="-387.14285"
+         height="20"
+         width="20"
          id="rect3523-3"
          style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <rect
+         inkscape:export-ydpi="23.700001"
+         inkscape:export-xdpi="23.700001"
+         y="-2550.4949"
+         x="-357.14285"
+         height="40"
+         width="40"
+         id="rect3523-1"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <rect
+         y="-2540.4949"
+         x="-347.14285"
+         height="20"
+         width="20"
+         id="rect3523-3-7"
+         style="fill:#000000;fill-opacity:1;stroke:none" />
+      <rect
+         y="-2520.4949"
+         x="-327.14285"
+         height="10"
+         width="10"
+         id="rect3523-3-7-4"
+         style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
   </g>
   <g
