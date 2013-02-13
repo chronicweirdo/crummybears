@@ -25,13 +25,74 @@
 		// import image
 		var img = new Image();
 		img.onload = function() {
-			scanImage3(this);
+			var corners = scanImage3(this);
 			//cornerHistogram(this);
+			extractBlocks(this, corners, this.naturalWidth, this.naturalHeight);
 		};
-		//img.src = 'home_outline.png';
-		img.src = 'corner_detection.png';
+		img.src = 'home_outline.png';
+		//img.src = 'corner_detection.png';
 		
 	});
+	
+	function extractBlocks(img, corners, width, height) {
+		// project corners on x and y, obtain set of x and y points
+		var projx = new Array();
+		var projy = new Array();
+		for (i = 0; i < corners.length; i++) {
+			projx[corners[i].x] = 1;
+			projy[corners[i].y] = 1;
+		}
+		projx[0] = 1; projy[0] = 1;
+		projx[width] = 1; projy[height] = 1;
+		var x = new Array();
+		for (i = 0; i < projx.length; i++) {
+			if (projx[i] == 1) {
+				x[x.length] = i;
+			}
+		}
+		var y = new Array();
+		for (i = 0; i < projy.length; i++) {
+			if (projy[i] == 1) {
+				y[y.length] = i;
+			}
+		}
+		log("x: " + x.length);
+		for (i = 0; i < x.length; i++) {
+			log(i + ": " + x[i]);
+		}
+		log("y: " + y.length);
+		for (i = 0; i < y.length; i++) {
+			log(i + ": " + y[i]);
+		}
+		// create division blocks
+		var blocks = new Array();
+		for (i = 1; i < y.length; i++) {
+			for (j = 1; j < x.length; j++) {
+				blocks[blocks.length] = {x0: x[j-1], y0: y[i-1], x1: x[j], y1: y[i]};
+			}
+		}
+		log("blocks length " + blocks.length);
+		canvas().strokeStyle = "#00FF00";
+		for (i = 0; i < blocks.length; i++) {
+			canvas().strokeRect(blocks[i].x0, blocks[i].y0, blocks[i].x1 - blocks[i].x0, blocks[i].y1 - blocks[i].y0);
+		}
+		
+		// select solid blocks
+		var solidBlocks = new Array();
+		for (i = 0; i < blocks.length; i++) {
+			var x = (blocks[i].x0 + blocks[i].x1) / 2;
+			var y = (blocks[i].y0 + blocks[i].y1) / 2;
+			var data = canvas().getImageData(x, y, 1, 1).data;
+			if (data[0] == 0 && data[1] == 0 && data[2] == 0) {
+				solidBlocks[solidBlocks.length] = blocks[i];
+			}
+		}
+		log("solid blocks length " + solidBlocks.length);
+		canvas().fillStyle = "#0000FF";
+		for (i = 0; i < solidBlocks.length; i++) {
+			canvas().fillRect(solidBlocks[i].x0, solidBlocks[i].y0, solidBlocks[i].x1 - solidBlocks[i].x0, solidBlocks[i].y1 - solidBlocks[i].y0);
+		}
+	}
 	
 	function scanImage2(img) {
 		canvas().drawImage(img,0,0);
@@ -94,6 +155,7 @@
 			logVector(i + " = ", corners[i]);
 			drawPoint(corners[i].x, corners[i].y, 3, "#FF0000");
 		}
+		return corners;
 	}
 	
 	function drawPoint(x, y, r, c) {
