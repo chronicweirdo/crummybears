@@ -29,11 +29,12 @@
 			//cornerHistogram(this);
 			extractBlocks(this, corners, this.naturalWidth, this.naturalHeight);
 		};
-		//img.src = 'home_outline.png';
-		img.src = 'corner_detection.png';
+		img.src = 'home_outline.png';
+		//img.src = 'corner_detection.png';
 		img.crossOrigin = '';
 	});
 	
+	// using the corners, create the solid blocks in the image
 	function extractBlocks(img, corners, width, height) {
 		// project corners on x and y, obtain set of x and y points
 		var projx = new Array();
@@ -91,30 +92,6 @@
 		canvas().fillStyle = "#0000FF";
 		for (i = 0; i < solidBlocks.length; i++) {
 			canvas().fillRect(solidBlocks[i].x0, solidBlocks[i].y0, solidBlocks[i].x1 - solidBlocks[i].x0, solidBlocks[i].y1 - solidBlocks[i].y0);
-		}
-	}
-	
-	function scanImage2(img) {
-		canvas().drawImage(img,0,0);
-		var width = img.naturalWidth;
-		var height = img.naturalHeight;
-		
-		var corners = new Array();
-		var x = 1;
-		var y = 1;
-		for (y = 1; y < height-1; y++) {
-			for (x = 1; x < width-1; x++) {
-				var data = canvas().getImageData(x-1, y-1, 3, 3).data;
-				var isCorner = checkCorner2(data);
-				if (isCorner) {
-					corners[corners.length] = {x: x, y: y};
-				}
-			}
-		}
-		//canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
-		for (i = 0; i < corners.length; i++) {
-			logVector(i + " = ", corners[i]);
-			drawPoint(corners[i].x, corners[i].y, 3, "#FF0000");
 		}
 	}
 	
@@ -265,85 +242,6 @@
 		return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
 	}
 	
-	function checkCorner2(data) {
-		// go over data and convert to black/not black matrix
-		var blackMatrix = extractColorMatrix(data, {r: 0, g: 0, b: 0});
-		// compute black matrix statistics
-		var total = sum(blackMatrix);
-		if (blackMatrix[4] == 1 && (total == 8 || total == 4 || total == 5)) return true;
-		return false;
-	}
-	
-	function isBlack2(c) {
-		if (c.r == 0 && c.g == 0 && c.b == 0) return true;
-		else return false;
-	}
-	
-	function scanImage(img) {
-		canvas().drawImage(img,0,0);
-		var width = img.naturalWidth;
-		var height = img.naturalHeight;
-		var imgData = canvas().getImageData(0, 0, width, height);
-		//for (i = 0; i < imgData.data.length; i++)
-			//log(imgData.data[i]);
-		log(imgData.data.length);
-		// print row x
-		//var x = 100;
-		var string = "";
-		var zeros = 0;
-		var others = 0;
-		//var x = 7;
-		//var y = 7;
-		var corners = new Array();
-		for (y = 1; y < height-1; y++) {
-			for (x = 1; x < width-1; x++) {
-				var data = canvas().getImageData(x-1, y-1, 3, 3).data;
-				if (checkCorner(data)) {
-					log("new corner " + x + "," + y);
-					corners[corners.length] = {x: x, y: y};
-				}
-			}
-		}
-		//}
-		//log(string);
-		//log(zeros + " " + others);
-		for (i = 0; i < corners.lenght; i++) {
-			logVector("corner" + i, corners[i]);
-		}
-	}
-	
-	function checkCorner(data) {
-		var tl, tr, bl, br;
-		/* log(data.length);
-		log("data:");
-		for (i = 0; i < data.length; i+=4) {
-			log(data[i] + " " + data[i+1] + " " + data[i+2] + " " + data[i+3]);
-		} */
-		tl = {r: data[0*4+0], g: data[0*4+1], b: data[0*4+2], a: data[0*4+3]};
-		tr = {r: data[2*4+0], g: data[2*4+1], b: data[2*4+2], a: data[2*4+3]};
-		bl = {r: data[6*4+0], g: data[6*4+1], b: data[6*4+2], a: data[6*4+3]};
-		br = {r: data[8*4+0], g: data[8*4+1], b: data[8*4+2], a: data[8*4+3]};
-		//logColor("tl", tl);
-		//logColor("tr", tr);
-		//logColor("bl", bl);
-		//logColor("br", br);
-		var tlb, trb, blb, brb;
-		tlb = isBlack(tl);
-		trb = isBlack(tr);
-		blb = isBlack(bl);
-		brb = isBlack(br);
-		var totalPercent = (tlb + trb + blb + brb) / 4.0;
-		var topPercent = (tlb + trb) / 2.0;
-		var bottomPercent = (blb + brb) / 2.0;
-		var leftPercent = (tlb + blb) / 2.0;
-		var rightPercent = (trb + brb) / 2.0;
-		//log(totalPercent + " " + topPercent + " " + bottomPercent + " " + leftPercent +  " " + rightPercent);
-		if (totalPercent == 0.75 || totalPercent == 0.25) {
-			return true;
-		}
-		return false;
-	}
-	
 	function isBlack(c) {
 		if (c.r == 0 && c.g == 0 && c.b == 0) return 1;
 		else return 0;
@@ -414,17 +312,6 @@
 				</td>
 			</tr>
 			
-		</table>
-	</div>
-	<div>
-		<h1>Notes:</h1>
-		<table>
-			<tr>
-				<th>How to detect corners and build blocks</th>
-			</tr>
-			<tr>
-				<td><img alt="formulas1" src="page13_formulas1.jpg"></td>
-			</tr>
 		</table>
 	</div>
 </body>

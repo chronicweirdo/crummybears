@@ -14,7 +14,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="house.svg"
    enable-background="new"
    inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\house.png"
@@ -50,9 +50,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.70000002"
-     inkscape:cx="-418.22372"
-     inkscape:cy="4032.8721"
+     inkscape:zoom="0.17500001"
+     inkscape:cx="1209.3882"
+     inkscape:cy="2745.8357"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -3736,21 +3736,57 @@
          id="rect3523-3-7-4"
          style="fill:#000000;fill-opacity:1;stroke:none" />
     </g>
-    <rect
-       style="fill:#ffffff;fill-opacity:1;stroke:none"
-       id="rect3520"
-       width="500"
-       height="315.789"
-       x="-585.71429"
-       y="-3131.998" />
-    <path
-       style="fill:#000000;fill-opacity:1;stroke:none"
-       d="m -585.7143,-3131.998 0,315.789 500.000008,0 0,-315.789 -500.000008,0 z m 210.52632,52.6315 78.94736,0 0,26.3158 39.47369,0 0,26.3157 39.47369,0 0,26.3158 78.94737,0 0,131.5787 -394.73685,0 0,-131.5787 78.94737,0 0,-26.3158 39.47368,0 0,-26.3157 39.47369,0 0,-26.3158 z"
-       id="rect6256-1-3"
-       inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\home_outline.png"
-       inkscape:export-xdpi="90"
-       inkscape:export-ydpi="90"
-       inkscape:connector-curvature="0" />
+    <g
+       id="g3510"
+       transform="translate(-219.99999,59.999998)">
+      <rect
+         y="-3131.998"
+         x="-585.71429"
+         height="315.789"
+         width="500"
+         id="rect3520"
+         style="fill:#ffffff;fill-opacity:1;stroke:none" />
+      <path
+         inkscape:connector-curvature="0"
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         inkscape:export-filename="E:\work_mess\workspaces\crummybears\html_platformer\WebContent\home_outline.png"
+         id="rect6256-1-3"
+         d="m -585.7143,-3131.998 0,315.789 500.000008,0 0,-315.789 -500.000008,0 z m 210.52632,52.6315 78.94736,0 0,26.3158 39.47369,0 0,26.3157 39.47369,0 0,26.3158 78.94737,0 0,131.5787 -394.73685,0 0,-131.5787 78.94737,0 0,-26.3158 39.47368,0 0,-26.3157 39.47369,0 0,-26.3158 z"
+         style="fill:#000000;fill-opacity:1;stroke:none" />
+    </g>
+    <g
+       id="g4802"
+       inkscape:export-filename="C:\Workspaces\crummybears\crummybears\html_platformer\WebContent\home_outline.png"
+       inkscape:export-xdpi="23.700001"
+       inkscape:export-ydpi="23.700001">
+      <rect
+         y="-3313.3481"
+         x="435.70093"
+         height="1200"
+         width="1900"
+         id="rect4764-2-9"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+      <rect
+         y="-2743.3545"
+         x="1785.7144"
+         height="430"
+         width="350"
+         id="rect4764-2"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+      <rect
+         y="-2683.3518"
+         x="785.71429"
+         height="370"
+         width="240"
+         id="rect4764"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:none" />
+      <path
+         inkscape:connector-curvature="0"
+         id="rect6256-9"
+         d="m 435.70089,-3313.3482 0,1200 1900.00001,0 0,-1200 -1900.00001,0 z m 800.00001,200 300,0 0,100 150,0 0,100 150,0 0,100 300,0 0,500 -1500.00001,0 0,-500 300,0 0,-100 150.00001,0 0,-100 150,0 0,-100 z"
+         style="fill:#000000;fill-opacity:1;stroke:none" />
+    </g>
   </g>
   <g
      inkscape:groupmode="layer"
