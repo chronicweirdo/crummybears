@@ -27,8 +27,8 @@
 		img.onload = function() {
 			var obstructiongBlocks = getInterestBlocks(this, {r: 0, g: 0, b: 0});
 			var actionBlocks = getInterestBlocks(this, {r: 255, g: 0, b: 0});
-			drawBlocks(obstructiongBlocks, "#0000FF");
-			drawBlocks(actionBlocks, "#00FF00");
+			drawBlocks(obstructiongBlocks, "#0000FF", true);
+			drawBlocks(actionBlocks, "#00FF00", true);
 			log("v16");
 		};
 		img.src = 'home_outline.png';
@@ -49,12 +49,18 @@
 		return blocks;
 	}
 	
-	function drawBlocks(blocks, color) {
-		canvas().strokeStyle = "#FF0000";
-		canvas().fillStyle = color;
+	function drawBlocks(blocks, color, showNumbers) {
 		for (i = 0; i < blocks.length; i++) {
+			canvas().strokeStyle = "#FF0000";
+			canvas().fillStyle = color;
 			canvas().fillRect(blocks[i].x0, blocks[i].y0, blocks[i].x1 - blocks[i].x0, blocks[i].y1 - blocks[i].y0);
 			canvas().strokeRect(blocks[i].x0, blocks[i].y0, blocks[i].x1 - blocks[i].x0, blocks[i].y1 - blocks[i].y0);
+			if (showNumbers) {
+				canvas().fillStyle = "#000000";
+				canvas().font = '10px san-serif';
+				canvas().textBaseline = 'top';
+				canvas().fillText(i, blocks[i].x0, blocks[i].y0);
+			}
 		}
 	}
 	
