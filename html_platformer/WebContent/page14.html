@@ -25,17 +25,37 @@
 		// import image
 		var img = new Image();
 		img.onload = function() {
-			var corners = scanImage3(this);
+			// set the interest color
+			var color = {r: 0, g: 0, b: 0};
+			// draw image and get data
+			var imageData = getImageData(img);
+			// extract corners from image data, using the given color for interest objects
+			var corners = findCorners(imageData, color);
+			// print corner histogram
 			//cornerHistogram(this);
-			extractBlocks(this, corners, this.naturalWidth, this.naturalHeight);
+			// extract solid blocks of interest objects, using the corners and the interest color
+			var blocks = extractBlocks(imageData, corners, color);
+			log("all blocks length: " + blocks.length);
+			drawBlocks(blocks, "#0000FF");
+			log("v11");
 		};
 		img.src = 'home_outline.png';
 		//img.src = 'corner_detection.png';
-		img.crossOrigin = '';
+		//img.crossOrigin = '';
 	});
 	
+	function drawBlocks(blocks, color) {
+		canvas().fillStyle = color;
+		for (i = 0; i < blocks.length; i++) {
+			canvas().fillRect(blocks[i].x0, blocks[i].y0, blocks[i].x1 - blocks[i].x0, blocks[i].y1 - blocks[i].y0);
+		}
+	}
+	
 	// using the corners, create the solid blocks in the image
-	function extractBlocks(img, corners, width, height) {
+	function extractBlocks(imageData, corners, color) {
+		var data = imageData.data;
+		var height = imageData.height;
+		var width = imageData.width;
 		// project corners on x and y, obtain set of x and y points
 		var projx = new Array();
 		var projy = new Array();
@@ -72,34 +92,54 @@
 				blocks[blocks.length] = {x0: x[j-1], y0: y[i-1], x1: x[j], y1: y[i]};
 			}
 		}
-		log("blocks length " + blocks.length);
+		/* log("blocks length " + blocks.length);
 		canvas().strokeStyle = "#00FF00";
 		for (i = 0; i < blocks.length; i++) {
 			canvas().strokeRect(blocks[i].x0, blocks[i].y0, blocks[i].x1 - blocks[i].x0, blocks[i].y1 - blocks[i].y0);
-		}
+		} */
 		
 		// select solid blocks
 		var solidBlocks = new Array();
 		for (i = 0; i < blocks.length; i++) {
-			var x = (blocks[i].x0 + blocks[i].x1) / 2;
-			var y = (blocks[i].y0 + blocks[i].y1) / 2;
-			var data = canvas().getImageData(x, y, 1, 1).data;
-			if (data[0] == 0 && data[1] == 0 && data[2] == 0) {
+			var x = Math.floor((blocks[i].x0 + blocks[i].x1) / 2);
+			var y = Math.floor((blocks[i].y0 + blocks[i].y1) / 2);
+			//var data = canvas().getImageData(x, y, 1, 1).data;
+			//if (data[0] == color.r && data[1] == color.g && data[2] == color.b) {
+			var pixel = getPixel(x, y, data, width, height);
+			//log("pixel " + x + " " + y + " c " + pixel.r + " " + pixel.g + " " + pixel.b);
+			if (pixel.r == color.r && pixel.g == color.g && pixel.b == color.b) {
 				solidBlocks[solidBlocks.length] = blocks[i];
 			}
 		}
-		log("solid blocks length " + solidBlocks.length);
-		canvas().fillStyle = "#0000FF";
-		for (i = 0; i < solidBlocks.length; i++) {
-			canvas().fillRect(solidBlocks[i].x0, solidBlocks[i].y0, solidBlocks[i].x1 - solidBlocks[i].x0, solidBlocks[i].y1 - solidBlocks[i].y0);
-		}
+		return solidBlocks;
 	}
 	
-	function scanImage3(img) {
+	// pixel size is always 4
+	function getPixel(x, y, data, width, height) {
+		var i = y * width * 4 + x * 4;
+		if (i < height * width * 4) {
+			var pixel = {r: data[i], g: data[i+1], b: data[i+2], a: data[i+3]}
+			return pixel;
+		}
+		return {};
+	}
+	
+	function getImageData(img) {
 		canvas().drawImage(img,0,0);
 		var width = img.naturalWidth;
 		var height = img.naturalHeight;
 		var data = canvas().getImageData(0, 0, width, height).data;
+		canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
+		return {data: data, width: width, height: height};
+	}
+	
+	function findCorners(imageData, color) {
+		var data = imageData.data;
+		var height = imageData.height;
+		var width = imageData.width;
+		var r = color.r;
+		var g = color.g;
+		var b = color.b;
 		
 		var corners = new Array();
 		var x = 1;
@@ -109,21 +149,23 @@
 		for (y = 1; y < height-1; y++) {
 			// find on left edge
 			var x = 0;
-			var p = (y * width + x) * 4;
-			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+			//var p = (y * width + x) * 4;
+			var pixel = getPixel(x, y, data, width, height);
+			if (pixel.r == r && pixel.g == g && pixel.b == b) {
 				var p_1 = ((y-1) * width + x) * 4;
 				var p1 = ((y+1) * width + x) * 4;
-				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+				if ((data[p_1] != r && data[p_1+1] != g && data[p_1+2] != b) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
 					corners[corners.length] = {x: x, y: y};
 				}
 			}
 			// find on right edge
 			var x = width-1;
-			var p = (y * width + x) * 4;
-			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+			//var p = (y * width + x) * 4;
+			var pixel = getPixel(x, y, data, width, height);
+			if (pixel.r == r && pixel.g == g && pixel.b == b) {
 				var p_1 = ((y-1) * width + x) * 4;
 				var p1 = ((y+1) * width + x) * 4;
-				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+				if ((data[p_1] != r && data[p_1+1] != g && data[p_1+2] != b) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
 					corners[corners.length] = {x: x, y: y};
 				}
 			}
@@ -131,21 +173,23 @@
 		for (x = 1; x < width-1; x++) {
 			// find on top edge
 			var y = 0;
-			var p = (y * width + x) * 4;
-			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+			//var p = (y * width + x) * 4;
+			var pixel = getPixel(x, y, data, width, height);
+			if (pixel.r == r && pixel.g == g && pixel.b == b) {
 				var p_1 = (y * width + x - 1) * 4;
 				var p1 = (y * width + x + 1) * 4;
-				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+				if ((data[p_1] != r && data[p_1+1] != g && data[p_1+2] != b) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
 					corners[corners.length] = {x: x, y: y};
 				}
 			}
 			// find on bottom edge
 			var y = height-1;
-			var p = (y * width + x) * 4;
-			if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+			//var p = (y * width + x) * 4;
+			var pixel = getPixel(x, y, data, width, height);
+			if (pixel.r == r && pixel.g == g && pixel.b == b) {
 				var p_1 = (y * width + x - 1) * 4;
 				var p1 = (y * width + x + 1) * 4;
-				if ((data[p_1] != 0 && data[p_1+1] != 0 && data[p_1+2] != 0) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
+				if ((data[p_1] != r && data[p_1+1] != g && data[p_1+2] != b) || (data[p1] != 0 && data[p1+1] != 0 && data[p1+2] != 0)) {
 					corners[corners.length] = {x: x, y: y};
 				}
 			}
@@ -156,13 +200,15 @@
 				var p = (y * width + x) * 4;
 				//var isCorner = checkCorner2(data);
 				// check if it is black
-				if (data[p] == 0 && data[p+1] == 0 && data[p+2] == 0) {
+				if (data[p] == r && data[p+1] == g && data[p+2] == b) {
 					// check sum of surrounding pixels
 					var sum = 0;
 					for (i = -1; i <= 1; i++) {
 						for (j = -1; j <= 1; j++) {
-							var z = ((y-i) * width + j + x) * 4;
-							if (data[z] == 0 && data[z+1] == 0 && data[z+2] == 0) {
+							//var z = ((y-i) * width + j + x) * 4;
+							var pixel = getPixel(x+j, y-i, data, width, height)
+							//if (data[z] == r && data[z+1] == g && data[z+2] == b) {
+							if (pixel.r == r && pixel.g == g && pixel.b == b) {
 								sum += 1;
 							}
 						}
@@ -181,10 +227,10 @@
 		corners[corners.length] = {x: width-1, y: 0};
 		// detect 
 		//canvas().clearRect(0, 0, canvasWidth(), canvasHeight());
-		for (i = 0; i < corners.length; i++) {
+		/* for (i = 0; i < corners.length; i++) {
 			logVector(i + " = ", corners[i]);
 			drawPoint(corners[i].x, corners[i].y, 3, "#FF0000");
-		}
+		} */
 		return corners;
 	}
 	
