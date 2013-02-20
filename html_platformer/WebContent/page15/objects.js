@@ -11,6 +11,7 @@ function Color(r, g, b) {
 }
 
 function Block() {
+	this.name = "Block";
 	// center of the block
 	this.position = new Vector(0, 0); 
 	// these are 'radiuses' of the block, so width would be dimension.x * 2
@@ -38,6 +39,7 @@ function Block() {
 }
 
 function MovingBlock() {
+	this.name = "MovingBlock";
 	this.velocity = new Vector(0, 0);
 	this.speed = new Vector(0, 0);
 	
@@ -53,5 +55,6 @@ function MovingBlock() {
 MovingBlock.prototype = new Block();
 
 function Ledge(position, dimension) {
+	this.name = "Ledge";
 }
 Ledge.prototype = new Block();

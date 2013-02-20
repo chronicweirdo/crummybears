@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Playground</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.hotkeys-0.7.9.min.js"></script>
+<script type="text/javascript" src="page15/objects.js"></script>
+<script>
+	$(function() {
+		log("test");
+		var block = new Block();
+		var movingBlock = new MovingBlock();
+		var ledge = new Ledge();
+		if (block instanceof Block) log("block instanceof block");
+		if (movingBlock instanceof Block) log("movingBlock instanceof block");
+		if (movingBlock instanceof Ledge) log("movingBlock instanceof ledge");
+		if (ledge instanceof Block) log("ledge instanceof block");
+		log(" ");
+		log(typeof movingBlock);
+		log(Object.prototype.toString.call(movingBlock));
+		log(Object.prototype.toString.apply(movingBlock));
+		
+		var p = orderObjects(movingBlock, block, Block, MovingBlock);
+		log(p);
+		log(p.a instanceof Block);
+		log(p.b instanceof MovingBlock);
+		
+		log(block.name);
+		log(movingBlock.name);
+		log(ledge.name);
+	});
+	
+	function orderObjects(o1, o2, t1, t2) {
+		if (o1 instanceof t1 && o2 instanceof t2) {
+			return {a: o1, b: o2};
+		}
+		if (o1 instanceof t2 && o2 instanceof t1) {
+			return {a: o2, b: o1};
+		}
+		return null;
+	}
+	
+
+	function log(text) {
+		$('#console').prepend(text + '<br />');
+	}
+	
+	function clearLog() {
+		$('#console').empty();
+	}
+</script>
+</head>
+<body>
+	<div id="console" style="height: 200px; width: 600px; overflow: scroll;"></div>
+</body>
+</html>
